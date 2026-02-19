@@ -3,6 +3,7 @@ import { SetupWizard } from './pages/setup'
 import { DashboardLayout } from './layouts/DashboardLayout'
 import { UsersPage } from './pages/dashboard/users'
 import { ProductsPage } from './pages/dashboard/products'
+import { CategoriesPage } from './pages/dashboard/categories'
 import { LoginPage } from './pages/login'
 import { useOperatorsStore } from './store/operators'
 
@@ -35,6 +36,7 @@ function App() {
                     <Route index element={<Navigate to="users" replace />} />
                     <Route path="users" element={<UsersPage />} />
                     <Route path="products" element={<ProductsPage />} />
+                    <Route path="categories" element={<CategoriesPage />} />
                     {/* Add more routes here later (e.g., sales) */}
                 </Route>
             </Routes>
