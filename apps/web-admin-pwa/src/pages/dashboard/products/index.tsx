@@ -23,12 +23,14 @@ import {
 import { Plus, Search, Edit2, Trash2 } from 'lucide-react'
 import { useProductsStore } from '../../../store/products'
 import { useCategoriesStore } from '../../../store/categories'
+import { useUnitsStore } from '../../../store/units'
 import { Product } from '@pos/shared'
 import { formatCurrency } from '../../../lib/utils'
 
 export function ProductsPage() {
     const { products, addProduct, updateProduct, deleteProduct } = useProductsStore()
     const { categories } = useCategoriesStore()
+    const { units } = useUnitsStore()
     const [searchQuery, setSearchQuery] = useState('')
     const [isDialogOpen, setIsDialogOpen] = useState(false)
     const [editingProduct, setEditingProduct] = useState<Product | null>(null)
@@ -40,6 +42,7 @@ export function ProductsPage() {
         price: '',
         barcode: '',
         categoryId: 'none',
+        unitId: 'none',
     })
 
     const filteredProducts = products.filter(
@@ -50,7 +53,7 @@ export function ProductsPage() {
 
     const handleOpenAdd = () => {
         setEditingProduct(null)
-        setFormData({ name: '', sku: '', price: '', barcode: '', categoryId: 'none' })
+        setFormData({ name: '', sku: '', price: '', barcode: '', categoryId: 'none', unitId: 'none' })
         setIsDialogOpen(true)
     }
 
@@ -62,6 +65,7 @@ export function ProductsPage() {
             price: (product.price / 100).toFixed(2), // Convert cents to reais for editing
             barcode: product.barcode || '',
             categoryId: product.categoryId || 'none',
+            unitId: product.unitId || 'none',
         })
         setIsDialogOpen(true)
     }
@@ -89,6 +93,7 @@ export function ProductsPage() {
                 price: numericPrice,
                 barcode: formData.barcode,
                 categoryId: formData.categoryId !== 'none' ? formData.categoryId : undefined,
+                unitId: formData.unitId !== 'none' ? formData.unitId : undefined,
             })
         } else {
             addProduct({
@@ -97,6 +102,7 @@ export function ProductsPage() {
                 price: numericPrice,
                 barcode: formData.barcode || undefined,
                 categoryId: formData.categoryId !== 'none' ? formData.categoryId : undefined,
+                unitId: formData.unitId !== 'none' ? formData.unitId : undefined,
             })
         }
         setIsDialogOpen(false)
@@ -105,6 +111,11 @@ export function ProductsPage() {
     const getCategoryDetails = (id?: string) => {
         if (!id) return null;
         return categories.find(c => c.id === id);
+    }
+
+    const getUnitDetails = (id?: string) => {
+        if (!id) return null;
+        return units.find(u => u.id === id);
     }
 
     return (
@@ -159,6 +170,7 @@ export function ProductsPage() {
                         ) : (
                             filteredProducts.map((product) => {
                                 const category = getCategoryDetails(product.categoryId);
+                                const unit = getUnitDetails(product.unitId);
                                 return (
                                     <TableRow key={product.id} className="group">
                                         <TableCell className="font-medium">
@@ -183,6 +195,11 @@ export function ProductsPage() {
                                         </TableCell>
                                         <TableCell className="font-medium text-emerald-600 dark:text-emerald-400">
                                             {formatCurrency(product.price)}
+                                            {unit && (
+                                                <span className="text-muted-foreground font-normal text-xs ml-1">
+                                                    / {unit.abbreviation}
+                                                </span>
+                                            )}
                                         </TableCell>
                                         <TableCell className="text-right">
                                             <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -277,14 +294,33 @@ export function ProductsPage() {
                                 </Select>
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="barcode">Barcode (Optional)</Label>
-                                <Input
-                                    id="barcode"
-                                    value={formData.barcode}
-                                    onChange={(e) => setFormData({ ...formData, barcode: e.target.value })}
-                                    placeholder="Scan or type barcode..."
-                                />
+                                <Label htmlFor="unit">Unit</Label>
+                                <Select
+                                    value={formData.unitId}
+                                    onValueChange={(value) => setFormData({ ...formData, unitId: value })}
+                                >
+                                    <SelectTrigger id="unit">
+                                        <SelectValue placeholder="Select a unit" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="none">None</SelectItem>
+                                        {units.map((u) => (
+                                            <SelectItem key={u.id} value={u.id}>
+                                                {u.name} ({u.abbreviation})
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                             </div>
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="barcode">Barcode (Optional)</Label>
+                            <Input
+                                id="barcode"
+                                value={formData.barcode}
+                                onChange={(e) => setFormData({ ...formData, barcode: e.target.value })}
+                                placeholder="Scan or type barcode..."
+                            />
                         </div>
                         <DialogFooter className="pt-4 mt-2 border-t border-slate-100 dark:border-zinc-800">
                             <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>

@@ -4,6 +4,7 @@ export interface Product {
     sku: string
     price: number // Price in cents to avoid floating point math errors
     categoryId?: string
+    unitId?: string
     barcode?: string
     createdAt: string
     updatedAt: string

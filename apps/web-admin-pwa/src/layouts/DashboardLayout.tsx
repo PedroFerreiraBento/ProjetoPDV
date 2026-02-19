@@ -1,5 +1,5 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, Users, Package, ShoppingCart, Settings, LogOut, Moon, Sun, Tag } from 'lucide-react'
+import { LayoutDashboard, Users, Package, ShoppingCart, Settings, LogOut, Moon, Sun, Tag, Scale } from 'lucide-react'
 import { Button } from '@pos/ui'
 import { useSetupStore } from '../store/setup'
 import { useOperatorsStore } from '../store/operators'
@@ -19,6 +19,7 @@ export function DashboardLayout() {
         { to: '/dashboard/sales', icon: ShoppingCart, label: 'Sales' },
         { to: '/dashboard/products', icon: Package, label: 'Products' },
         { to: '/dashboard/categories', icon: Tag, label: 'Categories' },
+        { to: '/dashboard/units', icon: Scale, label: 'Units' },
         { to: '/dashboard/users', icon: Users, label: 'Operators' },
         { to: '/dashboard/settings', icon: Settings, label: 'Settings' },
     ]

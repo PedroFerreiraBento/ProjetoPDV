@@ -33,3 +33,4 @@ export const formatCEP = (value: string) => {
 export * from './roles';
 export * from './products';
 export * from './categories';
+export * from './units';
