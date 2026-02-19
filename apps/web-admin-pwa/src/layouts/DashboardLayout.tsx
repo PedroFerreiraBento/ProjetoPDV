@@ -1,10 +1,18 @@
-import { Outlet, NavLink } from 'react-router-dom'
+import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { LayoutDashboard, Users, Package, ShoppingCart, Settings, LogOut, Moon, Sun } from 'lucide-react'
 import { Button } from '@pos/ui'
 import { useSetupStore } from '../store/setup'
+import { useOperatorsStore } from '../store/operators'
 
 export function DashboardLayout() {
+    const navigate = useNavigate()
     const { storeName, theme, setTheme } = useSetupStore()
+    const { currentOperator, logoutOperator } = useOperatorsStore()
+
+    const handleLogout = () => {
+        logoutOperator()
+        navigate('/login')
+    }
 
     const navItems = [
         { to: '/dashboard/overview', icon: LayoutDashboard, label: 'Overview' },
@@ -41,7 +49,7 @@ export function DashboardLayout() {
                 </nav>
 
                 <div className="p-4 border-t border-slate-200 dark:border-zinc-800">
-                    <Button variant="ghost" className="w-full justify-start text-muted-foreground" onClick={() => {/* Handle Logout */ }}>
+                    <Button variant="ghost" className="w-full justify-start text-muted-foreground" onClick={handleLogout}>
                         <LogOut className="h-5 w-5 mr-3" />
                         Sign Out
                     </Button>
@@ -62,7 +70,7 @@ export function DashboardLayout() {
                             {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
                         </Button>
                         <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
-                            A
+                            {currentOperator?.name?.charAt(0).toUpperCase() || 'A'}
                         </div>
                     </div>
                 </header>

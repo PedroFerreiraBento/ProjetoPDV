@@ -12,9 +12,12 @@ export interface Operator {
 
 interface OperatorsState {
     operators: Operator[]
+    currentOperator: Operator | null
     addOperator: (operator: Omit<Operator, 'id' | 'createdAt'>) => void
     removeOperator: (id: string) => void
     updateOperatorRole: (id: string, newRole: AppRole) => void
+    loginOperator: (id: string, pin: string) => boolean
+    logoutOperator: () => void
 }
 
 export const useOperatorsStore = create<OperatorsState>()(
@@ -30,6 +33,7 @@ export const useOperatorsStore = create<OperatorsState>()(
                     createdAt: new Date().toISOString(),
                 },
             ],
+            currentOperator: null,
             addOperator: (newOp) =>
                 set((state) => ({
                     operators: [
@@ -51,6 +55,19 @@ export const useOperatorsStore = create<OperatorsState>()(
                         op.id === id ? { ...op, role: newRole } : op
                     ),
                 })),
+            loginOperator: (id, pin) => {
+                let success = false
+                set((state) => {
+                    const operator = state.operators.find((op) => op.id === id)
+                    if (operator && operator.pin === pin) {
+                        success = true
+                        return { currentOperator: operator }
+                    }
+                    return { currentOperator: state.currentOperator }
+                })
+                return success
+            },
+            logoutOperator: () => set({ currentOperator: null }),
         }),
         {
             name: 'pos-operators-store',
