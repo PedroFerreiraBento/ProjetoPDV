@@ -1,0 +1,25 @@
+{
+    "name": "pos-monorepo",
+    "version": "0.0.0",
+    "private": true,
+    "scripts": {
+        "build": "turbo run build",
+        "dev": "turbo run dev",
+        "lint": "turbo run lint",
+        "clean": "turbo run clean"
+    },
+    "devDependencies": {
+        "turbo": "latest",
+        "typescript": "latest",
+        "prettier": "latest"
+    },
+    "packageManager": "pnpm@9.0.0",
+    "pnpm": {
+        "overrides": {
+            "esbuild": "^0.21.5"
+        }
+    },
+    "engines": {
+        "node": ">=18"
+    }
+}
