@@ -29,3 +29,5 @@ export const formatCEP = (value: string) => {
         .replace(/^(\d{5})(\d)/, '$1-$2')
         .substring(0, 9);
 }
+
+export * from './roles';
