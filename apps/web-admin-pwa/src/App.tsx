@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-route
 import { SetupWizard } from './pages/setup'
 import { DashboardLayout } from './layouts/DashboardLayout'
 import { UsersPage } from './pages/dashboard/users'
+import { ProductsPage } from './pages/dashboard/products'
 import { LoginPage } from './pages/login'
 import { useOperatorsStore } from './store/operators'
 
@@ -33,7 +34,8 @@ function App() {
                 }>
                     <Route index element={<Navigate to="users" replace />} />
                     <Route path="users" element={<UsersPage />} />
-                    {/* Add more routes here later (e.g., sales, products) */}
+                    <Route path="products" element={<ProductsPage />} />
+                    {/* Add more routes here later (e.g., sales) */}
                 </Route>
             </Routes>
         </BrowserRouter>
