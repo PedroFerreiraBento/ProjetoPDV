@@ -20,12 +20,57 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@pos/ui'
-import { Plus, Search, Edit2, Trash2 } from 'lucide-react'
+import { Plus, Search, Edit2, Trash2, X } from 'lucide-react'
 import { useProductsStore } from '../../../store/products'
 import { useCategoriesStore } from '../../../store/categories'
 import { useUnitsStore } from '../../../store/units'
-import { Product } from '@pos/shared'
+import { Product, ProductOption, ProductVariant } from '@pos/shared'
 import { formatCurrency } from '../../../lib/utils'
+
+type FormVariant = Omit<ProductVariant, 'price'> & { price: string };
+
+const generateVariants = (options: ProductOption[], existingVariants: FormVariant[]): FormVariant[] => {
+    const validOptions = options.filter(o => o.values.some(v => v.trim() !== ''));
+    if (validOptions.length === 0) return [];
+
+    const result: FormVariant[] = [];
+
+    const helper = (currentCombo: Record<string, string>, optionIndex: number) => {
+        if (optionIndex === validOptions.length) {
+            const existing = existingVariants.find(v => {
+                return Object.entries(currentCombo).every(([key, value]) => v.options[key] === value) && Object.keys(v.options).length === Object.keys(currentCombo).length;
+            });
+
+            if (existing) {
+                result.push(existing);
+            } else {
+                result.push({
+                    id: crypto.randomUUID(),
+                    sku: '',
+                    price: '',
+                    options: { ...currentCombo }
+                });
+            }
+            return;
+        }
+        const currentOption = validOptions[optionIndex];
+        const validValues = currentOption.values.filter(v => v.trim() !== '');
+
+        if (validValues.length === 0) {
+            helper(currentCombo, optionIndex + 1);
+            return;
+        }
+
+        for (const value of validValues) {
+            currentCombo[currentOption.name] = value.trim();
+            helper(currentCombo, optionIndex + 1);
+            delete currentCombo[currentOption.name];
+        }
+    };
+
+    helper({}, 0);
+    return result;
+}
 
 export function ProductsPage() {
     const { products, addProduct, updateProduct, deleteProduct } = useProductsStore()
@@ -43,6 +88,9 @@ export function ProductsPage() {
         barcode: '',
         categoryId: 'none',
         unitId: 'none',
+        hasVariations: false,
+        options: [] as ProductOption[],
+        variants: [] as FormVariant[],
     })
 
     const filteredProducts = products.filter(
@@ -53,19 +101,23 @@ export function ProductsPage() {
 
     const handleOpenAdd = () => {
         setEditingProduct(null)
-        setFormData({ name: '', sku: '', price: '', barcode: '', categoryId: 'none', unitId: 'none' })
+        setFormData({ name: '', sku: '', price: '', barcode: '', categoryId: 'none', unitId: 'none', hasVariations: false, options: [], variants: [] })
         setIsDialogOpen(true)
     }
 
     const handleOpenEdit = (product: Product) => {
         setEditingProduct(product)
+        const hasVars = product.variants && product.variants.length > 0;
         setFormData({
             name: product.name,
-            sku: product.sku,
-            price: (product.price / 100).toFixed(2), // Convert cents to reais for editing
+            sku: product.sku || '',
+            price: product.price !== undefined ? (product.price / 100).toFixed(2) : '', // Convert cents to reais for editing
             barcode: product.barcode || '',
             categoryId: product.categoryId || 'none',
             unitId: product.unitId || 'none',
+            hasVariations: hasVars ? true : false,
+            options: product.options ? JSON.parse(JSON.stringify(product.options)) : [],
+            variants: product.variants ? product.variants.map(v => ({ ...v, price: (v.price / 100).toFixed(2) })) : [],
         })
         setIsDialogOpen(true)
     }
@@ -79,31 +131,52 @@ export function ProductsPage() {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
 
-        const numericPrice = Math.round(parseFloat(formData.price.replace(',', '.')) * 100)
+        const numericPrice = formData.hasVariations ? undefined : Math.round(parseFloat(formData.price.replace(',', '.')) * 100)
 
-        if (isNaN(numericPrice) || numericPrice < 0) {
+        if (!formData.hasVariations && (numericPrice === undefined || isNaN(numericPrice) || numericPrice < 0)) {
             alert('Please enter a valid price.')
             return
         }
 
+        let formattedVariants: ProductVariant[] | undefined = undefined;
+        let formattedOptions: ProductOption[] | undefined = undefined;
+
+        if (formData.hasVariations) {
+            if (formData.variants.length === 0) {
+                alert('Please configure at least one variant combination.');
+                return;
+            }
+            const invalidVariant = formData.variants.find(v => {
+                const numeric = Math.round(parseFloat(v.price.replace(',', '.')) * 100);
+                return isNaN(numeric) || numeric < 0 || v.sku.trim() === '';
+            });
+            if (invalidVariant) {
+                alert('Please ensure all variants have a valid SKU and Price.');
+                return;
+            }
+
+            formattedVariants = formData.variants.map(v => ({
+                ...v,
+                price: Math.round(parseFloat(v.price.replace(',', '.')) * 100)
+            }));
+            formattedOptions = formData.options;
+        }
+
+        const payload = {
+            name: formData.name,
+            sku: formData.hasVariations ? undefined : formData.sku,
+            price: formData.hasVariations ? undefined : numericPrice,
+            barcode: formData.barcode || undefined,
+            categoryId: formData.categoryId !== 'none' ? formData.categoryId : undefined,
+            unitId: formData.unitId !== 'none' ? formData.unitId : undefined,
+            options: formattedOptions,
+            variants: formattedVariants,
+        };
+
         if (editingProduct) {
-            updateProduct(editingProduct.id, {
-                name: formData.name,
-                sku: formData.sku,
-                price: numericPrice,
-                barcode: formData.barcode,
-                categoryId: formData.categoryId !== 'none' ? formData.categoryId : undefined,
-                unitId: formData.unitId !== 'none' ? formData.unitId : undefined,
-            })
+            updateProduct(editingProduct.id, payload)
         } else {
-            addProduct({
-                name: formData.name,
-                sku: formData.sku,
-                price: numericPrice,
-                barcode: formData.barcode || undefined,
-                categoryId: formData.categoryId !== 'none' ? formData.categoryId : undefined,
-                unitId: formData.unitId !== 'none' ? formData.unitId : undefined,
-            })
+            addProduct(payload)
         }
         setIsDialogOpen(false)
     }
@@ -117,6 +190,22 @@ export function ProductsPage() {
         if (!id) return null;
         return units.find(u => u.id === id);
     }
+
+    const getProductPrice = (product: Product) => {
+        if (product.variants && product.variants.length > 0) {
+            const prices = product.variants.map(v => v.price);
+            const minPrice = Math.min(...prices);
+            return `A partir de ${formatCurrency(minPrice)}`;
+        }
+        return formatCurrency(product.price || 0);
+    };
+
+    const getProductSku = (product: Product) => {
+        if (product.variants && product.variants.length > 0) {
+            return `${product.variants.length} variações`;
+        }
+        return product.sku || '-';
+    };
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
@@ -190,12 +279,12 @@ export function ProductsPage() {
                                         </TableCell>
                                         <TableCell>
                                             <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-slate-400 font-mono">
-                                                {product.sku}
+                                                {getProductSku(product)}
                                             </span>
                                         </TableCell>
                                         <TableCell className="font-medium text-emerald-600 dark:text-emerald-400">
-                                            {formatCurrency(product.price)}
-                                            {unit && (
+                                            {getProductPrice(product)}
+                                            {unit && (!product.variants || product.variants.length === 0) && (
                                                 <span className="text-muted-foreground font-normal text-xs ml-1">
                                                     / {unit.abbreviation}
                                                 </span>
@@ -231,7 +320,7 @@ export function ProductsPage() {
 
             {/* Add/Edit Dialog */}
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogContent className="sm:max-w-[425px]">
+                <DialogContent className="sm:max-w-[650px] max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                         <DialogTitle>{editingProduct ? 'Edit Product' : 'Add New Product'}</DialogTitle>
                     </DialogHeader>
@@ -246,30 +335,32 @@ export function ProductsPage() {
                                 placeholder="e.g. Café Expresso"
                             />
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="sku">SKU *</Label>
-                                <Input
-                                    id="sku"
-                                    required
-                                    value={formData.sku}
-                                    onChange={(e) => setFormData({ ...formData, sku: e.target.value.toUpperCase() })}
-                                    placeholder="e.g. CAFE-01"
-                                    className="uppercase font-mono text-sm"
-                                />
+                        {!formData.hasVariations && (
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="sku">SKU *</Label>
+                                    <Input
+                                        id="sku"
+                                        required
+                                        value={formData.sku}
+                                        onChange={(e) => setFormData({ ...formData, sku: e.target.value.toUpperCase() })}
+                                        placeholder="e.g. CAFE-01"
+                                        className="uppercase font-mono text-sm"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="price">Price * (R$)</Label>
+                                    <Input
+                                        id="price"
+                                        required
+                                        type="text"
+                                        value={formData.price}
+                                        onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                                        placeholder="0.00"
+                                    />
+                                </div>
                             </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="price">Price * (R$)</Label>
-                                <Input
-                                    id="price"
-                                    required
-                                    type="text"
-                                    value={formData.price}
-                                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                                    placeholder="0.00"
-                                />
-                            </div>
-                        </div>
+                        )}
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <Label htmlFor="category">Category</Label>
@@ -322,6 +413,123 @@ export function ProductsPage() {
                                 placeholder="Scan or type barcode..."
                             />
                         </div>
+
+                        {/* Variations Toggle & Builder */}
+                        <div className="flex items-center gap-2 pt-2 border-t border-slate-100 dark:border-zinc-800 mt-4">
+                            <input
+                                type="checkbox"
+                                id="hasVariations"
+                                className="w-4 h-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:ring-white dark:ring-offset-zinc-950 cursor-pointer"
+                                checked={formData.hasVariations}
+                                onChange={(e) => setFormData({ ...formData, hasVariations: e.target.checked })}
+                            />
+                            <Label htmlFor="hasVariations" className="cursor-pointer font-normal">
+                                This product has multiple options (e.g., sizes or colors)
+                            </Label>
+                        </div>
+
+                        {formData.hasVariations && (
+                            <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-zinc-800">
+                                <div className="flex justify-between items-center">
+                                    <Label className="text-base font-semibold">Options</Label>
+                                    <Button type="button" variant="outline" size="sm" onClick={() => {
+                                        setFormData(prev => ({ ...prev, options: [...prev.options, { name: '', values: [] }] }))
+                                    }}>
+                                        Add Option
+                                    </Button>
+                                </div>
+
+                                {formData.options.map((opt, idx) => (
+                                    <div key={idx} className="flex gap-2 items-start bg-slate-50 dark:bg-zinc-800/50 p-3 rounded-lg border border-slate-100 dark:border-zinc-800">
+                                        <div className="space-y-2 flex-1">
+                                            <Label className="text-xs text-muted-foreground">Option Name</Label>
+                                            <Input
+                                                placeholder="e.g., Size"
+                                                value={opt.name}
+                                                onChange={e => {
+                                                    const newOptions = formData.options.map((o, i) => i === idx ? { ...o, name: e.target.value } : o);
+                                                    setFormData({ ...formData, options: newOptions });
+                                                }}
+                                            />
+                                        </div>
+                                        <div className="space-y-2 flex-[2]">
+                                            <Label className="text-xs text-muted-foreground">Values (comma separated)</Label>
+                                            <Input
+                                                placeholder="e.g., S, M, L"
+                                                value={opt.values.join(', ')}
+                                                onChange={e => {
+                                                    const newOptions = formData.options.map((o, i) => i === idx ? { ...o, values: e.target.value.split(',').map(v => v.trimStart()) } : o);
+                                                    const generated = generateVariants(newOptions, formData.variants);
+                                                    setFormData({ ...formData, options: newOptions, variants: generated });
+                                                }}
+                                            />
+                                        </div>
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            className="mt-6 text-rose-500 hover:text-rose-600 dark:hover:bg-rose-900/20"
+                                            onClick={() => {
+                                                const newOptions = formData.options.filter((_, i) => i !== idx);
+                                                const generated = generateVariants(newOptions, formData.variants);
+                                                setFormData({ ...formData, options: newOptions, variants: generated });
+                                            }}
+                                        >
+                                            <X className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                ))}
+
+                                {formData.variants.length > 0 && (
+                                    <div className="pt-4 space-y-2">
+                                        <Label className="text-base font-semibold">Variants</Label>
+                                        <div className="border border-slate-200 dark:border-zinc-800 rounded-lg overflow-hidden">
+                                            <Table>
+                                                <TableHeader>
+                                                    <TableRow className="bg-slate-50/50 dark:bg-zinc-800/50">
+                                                        <TableHead>Variant</TableHead>
+                                                        <TableHead>SKU</TableHead>
+                                                        <TableHead>Price</TableHead>
+                                                    </TableRow>
+                                                </TableHeader>
+                                                <TableBody>
+                                                    {formData.variants.map((v, vIdx) => (
+                                                        <TableRow key={v.id}>
+                                                            <TableCell className="font-medium text-xs">
+                                                                {Object.values(v.options).join(' / ')}
+                                                            </TableCell>
+                                                            <TableCell>
+                                                                <Input
+                                                                    value={v.sku}
+                                                                    placeholder="SKU"
+                                                                    className="h-8 text-xs font-mono"
+                                                                    onChange={e => {
+                                                                        const newVariants = formData.variants.map((variant, i) => i === vIdx ? { ...variant, sku: e.target.value.toUpperCase() } : variant);
+                                                                        setFormData({ ...formData, variants: newVariants });
+                                                                    }}
+                                                                />
+                                                            </TableCell>
+                                                            <TableCell>
+                                                                <Input
+                                                                    value={v.price}
+                                                                    placeholder="0.00"
+                                                                    className="h-8 text-xs"
+                                                                    onChange={e => {
+                                                                        const newVariants = formData.variants.map((variant, i) => i === vIdx ? { ...variant, price: e.target.value } : variant);
+                                                                        setFormData({ ...formData, variants: newVariants });
+                                                                    }}
+                                                                />
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    ))}
+                                                </TableBody>
+                                            </Table>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
                         <DialogFooter className="pt-4 mt-2 border-t border-slate-100 dark:border-zinc-800">
                             <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                                 Cancel
