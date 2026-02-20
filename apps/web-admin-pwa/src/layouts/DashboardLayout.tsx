@@ -3,6 +3,7 @@ import { LayoutDashboard, Users, Package, ShoppingCart, Settings, LogOut, Moon, 
 import { Button } from '@pos/ui'
 import { useSetupStore } from '../store/setup'
 import { useOperatorsStore } from '../store/operators'
+import { FastSearch } from '../components/FastSearch'
 
 export function DashboardLayout() {
     const navigate = useNavigate()
@@ -64,6 +65,7 @@ export function DashboardLayout() {
                 <header className="h-16 border-b bg-white dark:bg-zinc-900 border-slate-200 dark:border-zinc-800 flex items-center justify-between px-6 shrink-0">
                     <h2 className="text-lg font-semibold">Dashboard</h2>
                     <div className="flex items-center gap-4">
+                        <FastSearch />
                         <Button
                             variant="ghost"
                             size="icon"
