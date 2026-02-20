@@ -27,7 +27,7 @@ import { useUnitsStore } from '../../../store/units'
 import { Product, ProductOption, ProductVariant } from '@pos/shared'
 import { formatCurrency } from '../../../lib/utils'
 
-type FormVariant = Omit<ProductVariant, 'price'> & { price: string };
+type FormVariant = Omit<ProductVariant, 'price' | 'barcode'> & { price: string, barcode: string };
 
 const generateVariants = (options: ProductOption[], existingVariants: FormVariant[]): FormVariant[] => {
     const validOptions = options.filter(o => o.values.some(v => v.trim() !== ''));
@@ -48,6 +48,7 @@ const generateVariants = (options: ProductOption[], existingVariants: FormVarian
                     id: crypto.randomUUID(),
                     sku: '',
                     price: '',
+                    barcode: '',
                     options: { ...currentCombo }
                 });
             }
@@ -94,9 +95,23 @@ export function ProductsPage() {
     })
 
     const filteredProducts = products.filter(
-        (product) =>
-            product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            product.sku.toLowerCase().includes(searchQuery.toLowerCase())
+        (product) => {
+            const searchLower = searchQuery.toLowerCase();
+            const matchesBasic = product.name.toLowerCase().includes(searchLower) ||
+                (product.sku && product.sku.toLowerCase().includes(searchLower)) ||
+                (product.barcode && product.barcode.toLowerCase().includes(searchLower));
+
+            if (matchesBasic) return true;
+
+            if (product.variants && product.variants.length > 0) {
+                return product.variants.some(v =>
+                    (v.sku && v.sku.toLowerCase().includes(searchLower)) ||
+                    (v.barcode && v.barcode.toLowerCase().includes(searchLower))
+                );
+            }
+
+            return false;
+        }
     )
 
     const handleOpenAdd = () => {
@@ -117,7 +132,7 @@ export function ProductsPage() {
             unitId: product.unitId || 'none',
             hasVariations: hasVars ? true : false,
             options: product.options ? JSON.parse(JSON.stringify(product.options)) : [],
-            variants: product.variants ? product.variants.map(v => ({ ...v, price: (v.price / 100).toFixed(2) })) : [],
+            variants: product.variants ? product.variants.map(v => ({ ...v, price: (v.price / 100).toFixed(2), barcode: v.barcode || '' })) : [],
         })
         setIsDialogOpen(true)
     }
@@ -157,7 +172,8 @@ export function ProductsPage() {
 
             formattedVariants = formData.variants.map(v => ({
                 ...v,
-                price: Math.round(parseFloat(v.price.replace(',', '.')) * 100)
+                price: Math.round(parseFloat(v.price.replace(',', '.')) * 100),
+                barcode: v.barcode.trim() === '' ? undefined : v.barcode.trim()
             }));
             formattedOptions = formData.options;
         }
@@ -488,8 +504,9 @@ export function ProductsPage() {
                                                 <TableHeader>
                                                     <TableRow className="bg-slate-50/50 dark:bg-zinc-800/50">
                                                         <TableHead>Variant</TableHead>
-                                                        <TableHead>SKU</TableHead>
-                                                        <TableHead>Price</TableHead>
+                                                        <TableHead>SKU *</TableHead>
+                                                        <TableHead>Price *</TableHead>
+                                                        <TableHead>Barcode</TableHead>
                                                     </TableRow>
                                                 </TableHeader>
                                                 <TableBody>
@@ -516,6 +533,17 @@ export function ProductsPage() {
                                                                     className="h-8 text-xs"
                                                                     onChange={e => {
                                                                         const newVariants = formData.variants.map((variant, i) => i === vIdx ? { ...variant, price: e.target.value } : variant);
+                                                                        setFormData({ ...formData, variants: newVariants });
+                                                                    }}
+                                                                />
+                                                            </TableCell>
+                                                            <TableCell>
+                                                                <Input
+                                                                    value={v.barcode}
+                                                                    placeholder="Barcode"
+                                                                    className="h-8 text-xs font-mono"
+                                                                    onChange={e => {
+                                                                        const newVariants = formData.variants.map((variant, i) => i === vIdx ? { ...variant, barcode: e.target.value } : variant);
                                                                         setFormData({ ...formData, variants: newVariants });
                                                                     }}
                                                                 />
