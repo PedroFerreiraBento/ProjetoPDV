@@ -2,7 +2,7 @@ import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useSetupStore } from '../../store/setup'
 import { Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, Input, Label } from '@pos/ui'
-import { Moon, Sun, Store, MapPin, CheckCircle2, ChevronRight, ChevronLeft, Loader2 } from 'lucide-react'
+import { Moon, Sun, Store, MapPin, CheckCircle2, ChevronRight, Loader2 } from 'lucide-react'
 import { formatCNPJ, formatPhone, formatCEP } from '@pos/shared'
 
 export function SetupWizard() {

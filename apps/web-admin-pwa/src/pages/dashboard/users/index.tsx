@@ -1,4 +1,4 @@
-import { Button, Card, CardContent, CardHeader, CardTitle, CardDescription, Input, Label, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@pos/ui'
+import { Button, Card, CardContent, CardHeader, CardTitle, Input, Label, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@pos/ui'
 import { Plus, MoreVertical, ShieldAlert, UserCog, User } from 'lucide-react'
 import { useState } from 'react'
 import { useOperatorsStore } from '../../../store/operators'

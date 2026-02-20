@@ -5,6 +5,7 @@ import { Product } from '@pos/shared'
 interface ProductsState {
     products: Product[]
     addProduct: (product: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>) => void
+    addProducts: (products: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>[]) => void
     updateProduct: (id: string, product: Partial<Omit<Product, 'id' | 'createdAt' | 'updatedAt'>>) => void
     deleteProduct: (id: string) => void
 }
@@ -49,6 +50,18 @@ export const useProductsStore = create<ProductsState>()(
                             createdAt: new Date().toISOString(),
                             updatedAt: new Date().toISOString(),
                         },
+                    ],
+                })),
+            addProducts: (newProducts) =>
+                set((state) => ({
+                    products: [
+                        ...state.products,
+                        ...newProducts.map((p) => ({
+                            ...p,
+                            id: crypto.randomUUID(),
+                            createdAt: new Date().toISOString(),
+                            updatedAt: new Date().toISOString(),
+                        })),
                     ],
                 })),
             updateProduct: (id, updatedFields) =>

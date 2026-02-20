@@ -24,10 +24,18 @@ import { Plus, Search, Edit2, Trash2, X } from 'lucide-react'
 import { useProductsStore } from '../../../store/products'
 import { useCategoriesStore } from '../../../store/categories'
 import { useUnitsStore } from '../../../store/units'
+import Papa from 'papaparse'
 import { Product, ProductOption, ProductVariant } from '@pos/shared'
 import { formatCurrency } from '../../../lib/utils'
 
 type FormVariant = Omit<ProductVariant, 'price' | 'barcode'> & { price: string, barcode: string };
+
+interface CsvProductRow {
+    Name: string;
+    SKU: string;
+    Price: string;
+    Barcode: string;
+}
 
 const generateVariants = (options: ProductOption[], existingVariants: FormVariant[]): FormVariant[] => {
     const validOptions = options.filter(o => o.values.some(v => v.trim() !== ''));
@@ -74,12 +82,15 @@ const generateVariants = (options: ProductOption[], existingVariants: FormVarian
 }
 
 export function ProductsPage() {
-    const { products, addProduct, updateProduct, deleteProduct } = useProductsStore()
+    const { products, addProduct, updateProduct, deleteProduct, addProducts } = useProductsStore()
     const { categories } = useCategoriesStore()
     const { units } = useUnitsStore()
     const [searchQuery, setSearchQuery] = useState('')
     const [isDialogOpen, setIsDialogOpen] = useState(false)
     const [editingProduct, setEditingProduct] = useState<Product | null>(null)
+    const [isImportDialogOpen, setIsImportDialogOpen] = useState(false)
+    const [importData, setImportData] = useState<CsvProductRow[]>([])
+    const [importError, setImportError] = useState<string | null>(null)
 
     // Form State
     const [formData, setFormData] = useState({
@@ -118,6 +129,64 @@ export function ProductsPage() {
         setEditingProduct(null)
         setFormData({ name: '', sku: '', price: '', barcode: '', categoryId: 'none', unitId: 'none', hasVariations: false, options: [], variants: [] })
         setIsDialogOpen(true)
+    }
+
+    const handleOpenImport = () => {
+        setImportData([])
+        setImportError(null)
+        setIsImportDialogOpen(true)
+    }
+
+    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (!file) return
+
+        Papa.parse<CsvProductRow>(file, {
+            header: true,
+            skipEmptyLines: true,
+            complete: (results) => {
+                if (results.errors.length > 0) {
+                    setImportError('Erro ao ler CSV. Verifique se o formato está correto.')
+                    return
+                }
+                setImportData(results.data)
+                setImportError(null)
+            },
+            error: (error) => {
+                setImportError(`Erro interno: ${error.message}`)
+            }
+        })
+    }
+
+    const handleImportSubmit = () => {
+        if (importData.length === 0) return
+
+        const productsToAdd: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>[] = []
+
+        for (const row of importData) {
+            if (!row.Name || !row.Price) {
+                setImportError('Erro: Nome e Preço (Price) são obrigatórios para todos os produtos.')
+                return
+            }
+
+            // Convert string price (e.g. "10,50" or "10.50") to cents
+            const numericPrice = Math.round(parseFloat(row.Price.replace(',', '.')) * 100)
+
+            if (isNaN(numericPrice) || numericPrice < 0) {
+                setImportError(`Erro: Preço inválido no produto "${row.Name}".`)
+                return
+            }
+
+            productsToAdd.push({
+                name: row.Name,
+                sku: row.SKU || '',
+                price: numericPrice,
+                barcode: row.Barcode || '',
+            })
+        }
+
+        addProducts(productsToAdd)
+        setIsImportDialogOpen(false)
     }
 
     const handleOpenEdit = (product: Product) => {
@@ -235,10 +304,13 @@ export function ProductsPage() {
                         Manage your store's catalog and pricing.
                     </p>
                 </div>
-                <Button onClick={handleOpenAdd} className="w-full sm:w-auto shadow-md">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Product
-                </Button>
+                <div className="flex gap-2">
+                    <Button variant="outline" onClick={handleOpenImport}>Import CSV</Button>
+                    <Button onClick={handleOpenAdd} className="w-full sm:w-auto shadow-md">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Product
+                    </Button>
+                </div>
             </div>
 
             {/* Actions/Search Bar */}
@@ -565,6 +637,88 @@ export function ProductsPage() {
                             <Button type="submit">{editingProduct ? 'Save Changes' : 'Add Product'}</Button>
                         </DialogFooter>
                     </form>
+                </DialogContent>
+            </Dialog>
+
+            {/* Import CSV Dialog */}
+            <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
+                <DialogContent className="sm:max-w-[700px] max-h-[90vh] flex flex-col">
+                    <DialogHeader>
+                        <DialogTitle>Import Products</DialogTitle>
+                        <p className="text-sm text-muted-foreground">
+                            Faça o upload de um arquivo CSV para importar produtos em massa.
+                        </p>
+                    </DialogHeader>
+
+                    <div className="flex-1 overflow-y-auto pr-2 space-y-6 mt-4">
+                        <div className="space-y-2">
+                            <Label>Template CSV</Label>
+                            <p className="text-xs text-slate-500 mb-2">
+                                O arquivo deve conter as seguintes colunas exatas: Name, SKU, Price, Barcode.
+                            </p>
+                            <div className="p-4 rounded-md shadow-inner bg-slate-100 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 font-mono text-xs text-slate-700 dark:text-slate-400">
+                                Name,SKU,Price,Barcode<br />
+                                "Café Expresso","CAFE-01","5,50","7891010"<br />
+                                "Pão de Queijo","PAO-01","4,00",""<br />
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label>Upload CSV</Label>
+                            <Input
+                                type="file"
+                                accept=".csv"
+                                onChange={handleFileUpload}
+                                className="cursor-pointer"
+                            />
+                        </div>
+
+                        {importError && (
+                            <div className="text-sm p-3 rounded-md bg-rose-50 text-rose-600 dark:bg-rose-950/50 dark:text-rose-400 border border-rose-200 dark:border-rose-900">
+                                {importError}
+                            </div>
+                        )}
+
+                        {importData.length > 0 && (
+                            <div className="space-y-2">
+                                <Label>Preview ({importData.length} items)</Label>
+                                <div className="rounded-md border border-slate-200 dark:border-zinc-800 overflow-hidden max-h-48 overflow-y-auto shadow-sm">
+                                    <Table>
+                                        <TableHeader className="bg-slate-50/50 dark:bg-zinc-800/50 sticky top-0 shadow-sm z-10">
+                                            <TableRow>
+                                                <TableHead>Name</TableHead>
+                                                <TableHead>SKU</TableHead>
+                                                <TableHead>Price</TableHead>
+                                                <TableHead>Barcode</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody className="bg-white dark:bg-zinc-900">
+                                            {importData.slice(0, 10).map((row, idx) => (
+                                                <TableRow key={idx}>
+                                                    <TableCell>{row.Name}</TableCell>
+                                                    <TableCell>{row.SKU}</TableCell>
+                                                    <TableCell>{row.Price}</TableCell>
+                                                    <TableCell>{row.Barcode}</TableCell>
+                                                </TableRow>
+                                            ))}
+                                            {importData.length > 10 && (
+                                                <TableRow>
+                                                    <TableCell colSpan={4} className="text-center text-slate-500 text-xs py-3">
+                                                        ... and {importData.length - 10} more rows
+                                                    </TableCell>
+                                                </TableRow>
+                                            )}
+                                        </TableBody>
+                                    </Table>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    <DialogFooter className="mt-6 pt-4 border-t border-slate-100 dark:border-zinc-800">
+                        <Button variant="outline" onClick={() => setIsImportDialogOpen(false)}>Cancel</Button>
+                        <Button onClick={handleImportSubmit} disabled={importData.length === 0}>Import Products</Button>
+                    </DialogFooter>
                 </DialogContent>
             </Dialog>
         </div>
