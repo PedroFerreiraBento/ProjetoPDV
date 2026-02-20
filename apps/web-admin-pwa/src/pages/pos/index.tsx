@@ -1,14 +1,108 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useProductsStore } from '../../store/products'
+import { Product, ProductVariant } from '@pos/shared'
 import { Button } from '@pos/ui'
-import { ArrowLeft, ShoppingCart, Search, Terminal } from 'lucide-react'
+import { ArrowLeft, ShoppingCart, Search, Terminal, Plus, Minus, Trash2 } from 'lucide-react'
 import { formatCurrency } from '../../lib/utils'
+import { useBarcodeScanner } from '../../hooks/useBarcodeScanner'
+
+interface CartItem {
+    id: string
+    product: Product
+    variant?: ProductVariant
+    quantity: number
+    price: number
+    name: string
+}
 
 export function PosPage() {
     const navigate = useNavigate()
     const { products } = useProductsStore()
+    const [cartItems, setCartItems] = useState<CartItem[]>([])
+    const [searchTerm, setSearchTerm] = useState('')
 
     const favoriteProducts = products.filter(p => p.isFavorite)
+
+    const addItemToCart = (product: Product, variant?: ProductVariant) => {
+        setCartItems(prev => {
+            const existingId = variant ? `${product.id}-${variant.id}` : product.id
+            const existingIndex = prev.findIndex(item => item.id === existingId)
+
+            if (existingIndex >= 0) {
+                const newItems = [...prev]
+                newItems[existingIndex].quantity += 1
+                return newItems
+            }
+
+            const price = variant ? variant.price : (product.price || 0)
+            let name = product.name
+            if (variant && variant.options) {
+                const opts = Object.values(variant.options).join(' / ')
+                if (opts) name += ` (${opts})`
+            }
+
+            return [...prev, {
+                id: existingId,
+                product,
+                variant,
+                quantity: 1,
+                price,
+                name
+            }]
+        })
+    }
+
+    const updateItemQuantity = (id: string, delta: number) => {
+        setCartItems(prev => prev.map(item => {
+            if (item.id === id) {
+                const newQuantity = Math.max(1, item.quantity + delta)
+                return { ...item, quantity: newQuantity }
+            }
+            return item
+        }))
+    }
+
+    const removeItem = (id: string) => {
+        setCartItems(prev => prev.filter(item => item.id !== id))
+    }
+
+    const handleScan = (barcode: string) => {
+        const cleanBarcode = barcode.trim()
+        if (!cleanBarcode) return
+
+        let foundProduct: Product | undefined
+        let foundVariant: ProductVariant | undefined
+
+        // Simple linear search for matching barcode
+        for (const product of products) {
+            if (product.barcode === cleanBarcode) {
+                foundProduct = product
+                break
+            }
+            if (product.variants) {
+                const variant = product.variants.find(v => v.barcode === cleanBarcode)
+                if (variant) {
+                    foundProduct = product
+                    foundVariant = variant
+                    break
+                }
+            }
+        }
+
+        if (foundProduct) {
+            addItemToCart(foundProduct, foundVariant)
+            // Optional: play a success beep here
+        } else {
+            // Optional: play an error beep here
+            console.warn('Scanned barcode not found:', cleanBarcode)
+        }
+    }
+
+    // Attach barcode scanner hook
+    useBarcodeScanner({ onScan: handleScan })
+
+    const cartTotal = cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0)
 
     return (
         <div className="flex h-screen w-full bg-slate-100 dark:bg-zinc-950 text-slate-900 dark:text-slate-50 overflow-hidden font-sans">
@@ -30,6 +124,14 @@ export function PosPage() {
                         <input
                             type="text"
                             placeholder="Buscar produto ou código de barras..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                    handleScan(searchTerm)
+                                    setSearchTerm('')
+                                }
+                            }}
                             className="w-full h-9 pl-9 pr-4 rounded-full bg-slate-100 dark:bg-zinc-800 border-transparent focus:border-primary focus:ring-1 focus:ring-primary text-sm outline-none transition-all"
                         />
                     </div>
@@ -62,8 +164,16 @@ export function PosPage() {
                                         key={product.id}
                                         className="flex flex-col items-start p-3 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl shadow-sm hover:border-primary hover:shadow-md transition-all text-left group aspect-square justify-between"
                                         onClick={() => {
-                                            // Handle add to cart here
-                                            console.log('Added ' + product.name + ' to cart')
+                                            const hasVariants = product.variants && product.variants.length > 0
+                                            // Ensure we only add products that have a direct price (no variations) or pick default
+                                            if (!hasVariants) {
+                                                addItemToCart(product)
+                                            } else {
+                                                // If it has variations, ideally we pop up a selector, but for now just pick the first variant or warn
+                                                if (product.variants && product.variants.length > 0) {
+                                                    addItemToCart(product, product.variants[0])
+                                                }
+                                            }
                                         }}
                                     >
                                         <div className="w-full font-medium text-sm leading-tight line-clamp-2">
@@ -92,10 +202,38 @@ export function PosPage() {
                     </span>
                 </div>
 
-                {/* Cart Items Placeholder */}
-                <div className="flex-1 overflow-y-auto p-4 flex flex-col items-center justify-center text-slate-400">
-                    <PackageIcon />
-                    <p className="mt-4 text-sm text-center">O carrinho está vazio.<br />Selecione produtos para iniciar a venda.</p>
+                {/* Cart Items */}
+                <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-2">
+                    {cartItems.length === 0 ? (
+                        <div className="h-full flex flex-col items-center justify-center text-slate-400">
+                            <PackageIcon />
+                            <p className="mt-4 text-sm text-center">O carrinho está vazio.<br />Selecione produtos ou bipe o código de barras.</p>
+                        </div>
+                    ) : (
+                        cartItems.map((item) => (
+                            <div key={item.id} className="flex flex-col gap-2 p-3 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg">
+                                <div className="flex justify-between items-start gap-2">
+                                    <span className="font-medium text-sm leading-tight text-slate-900 dark:text-slate-50 line-clamp-2">{item.name}</span>
+                                    <span className="font-semibold text-sm text-slate-900 dark:text-slate-50 shrink-0">{formatCurrency(item.price * item.quantity)}</span>
+                                </div>
+                                <div className="flex items-center justify-between mt-1">
+                                    <span className="text-xs text-slate-500">{formatCurrency(item.price)} un</span>
+                                    <div className="flex items-center gap-1 bg-slate-100 dark:bg-zinc-800 rounded-md p-0.5 border border-slate-200 dark:border-zinc-700">
+                                        <Button variant="ghost" size="icon" className="h-6 w-6 rounded hover:bg-white dark:hover:bg-zinc-700" onClick={() => updateItemQuantity(item.id, -1)}>
+                                            <Minus className="h-3 w-3" />
+                                        </Button>
+                                        <span className="w-6 text-center text-xs font-semibold">{item.quantity}</span>
+                                        <Button variant="ghost" size="icon" className="h-6 w-6 rounded hover:bg-white dark:hover:bg-zinc-700" onClick={() => updateItemQuantity(item.id, 1)}>
+                                            <Plus className="h-3 w-3" />
+                                        </Button>
+                                    </div>
+                                    <Button variant="ghost" size="icon" className="h-7 w-7 text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-md shrink-0" onClick={() => removeItem(item.id)}>
+                                        <Trash2 className="h-3 w-3" />
+                                    </Button>
+                                </div>
+                            </div>
+                        ))
+                    )}
                 </div>
 
                 {/* Cart Totals Placeholder */}
@@ -109,10 +247,13 @@ export function PosPage() {
                         <span>R$ 0,00</span>
                     </div>
                     <div className="flex justify-between items-center mb-6">
-                        <span className="font-semibold text-lg">Total</span>
-                        <span className="font-bold text-2xl text-emerald-600 dark:text-emerald-400">R$ 0,00</span>
+                        <span className="font-semibold text-lg text-slate-900 dark:text-slate-50">Total</span>
+                        <span className="font-bold text-2xl text-emerald-600 dark:text-emerald-400">{formatCurrency(cartTotal)}</span>
                     </div>
-                    <Button className="w-full h-14 text-lg bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg">
+                    <Button
+                        className="w-full h-14 text-lg bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg disabled:opacity-50"
+                        disabled={cartItems.length === 0}
+                    >
                         Finalizar Venda
                     </Button>
                 </div>
