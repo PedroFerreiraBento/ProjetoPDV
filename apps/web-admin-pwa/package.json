@@ -13,6 +13,7 @@
         "@pos/shared": "workspace:*",
         "@pos/ui": "workspace:*",
         "clsx": "^2.1.1",
+        "html5-qrcode": "^2.3.8",
         "lucide-react": "^0.300.0",
         "papaparse": "^5.5.3",
         "react": "^18.2.0",
