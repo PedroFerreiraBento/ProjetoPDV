@@ -6,6 +6,7 @@ import { ProductsPage } from './pages/dashboard/products'
 import { CategoriesPage } from './pages/dashboard/categories'
 import { UnitsPage } from './pages/dashboard/units'
 import { LoginPage } from './pages/login'
+import { PosPage } from './pages/pos'
 import { useOperatorsStore } from './store/operators'
 
 function RequireAuth({ children }: { children: JSX.Element }) {
@@ -40,8 +41,13 @@ function App() {
                     <Route path="products" element={<ProductsPage />} />
                     <Route path="categories" element={<CategoriesPage />} />
                     <Route path="units" element={<UnitsPage />} />
-                    {/* Add more routes here later (e.g., sales) */}
+                    <Route path="units" element={<UnitsPage />} />
                 </Route>
+                <Route path="/pos" element={
+                    <RequireAuth>
+                        <PosPage />
+                    </RequireAuth>
+                } />
             </Routes>
         </BrowserRouter>
     )

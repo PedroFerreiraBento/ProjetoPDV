@@ -20,7 +20,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@pos/ui'
-import { Plus, Search, Edit2, Trash2, X } from 'lucide-react'
+import { Plus, Search, Edit2, Trash2, X, Star } from 'lucide-react'
 import { useProductsStore } from '../../../store/products'
 import { useCategoriesStore } from '../../../store/categories'
 import { useUnitsStore } from '../../../store/units'
@@ -212,6 +212,10 @@ export function ProductsPage() {
         }
     }
 
+    const handleToggleFavorite = (id: string, currentStatus: boolean | undefined) => {
+        updateProduct(id, { isFavorite: !currentStatus })
+    }
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
 
@@ -380,6 +384,15 @@ export function ProductsPage() {
                                         </TableCell>
                                         <TableCell className="text-right">
                                             <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className={`h-8 w-8 ${product.isFavorite ? 'text-amber-500 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20' : 'text-slate-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20'}`}
+                                                    onClick={() => handleToggleFavorite(product.id, product.isFavorite)}
+                                                    title="Toggle POS Favorite"
+                                                >
+                                                    <Star className="h-4 w-4" fill={product.isFavorite ? "currentColor" : "none"} />
+                                                </Button>
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"

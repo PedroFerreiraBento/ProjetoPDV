@@ -1,5 +1,5 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, Users, Package, ShoppingCart, Settings, LogOut, Moon, Sun, Tag, Scale } from 'lucide-react'
+import { LayoutDashboard, Users, Package, ShoppingCart, Settings, LogOut, Moon, Sun, Tag, Scale, Terminal } from 'lucide-react'
 import { Button } from '@pos/ui'
 import { useSetupStore } from '../store/setup'
 import { useOperatorsStore } from '../store/operators'
@@ -65,6 +65,14 @@ export function DashboardLayout() {
                 <header className="h-16 border-b bg-white dark:bg-zinc-900 border-slate-200 dark:border-zinc-800 flex items-center justify-between px-6 shrink-0">
                     <h2 className="text-lg font-semibold">Dashboard</h2>
                     <div className="flex items-center gap-4">
+                        <Button
+                            variant="default"
+                            className="mr-4 hidden sm:flex bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
+                            onClick={() => navigate('/pos')}
+                        >
+                            <Terminal className="w-4 h-4 mr-2" />
+                            Open POS
+                        </Button>
                         <FastSearch />
                         <Button
                             variant="ghost"

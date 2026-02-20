@@ -19,6 +19,7 @@ export interface Product {
     categoryId?: string
     unitId?: string
     barcode?: string
+    isFavorite?: boolean
 
     options?: ProductOption[]
     variants?: ProductVariant[]
