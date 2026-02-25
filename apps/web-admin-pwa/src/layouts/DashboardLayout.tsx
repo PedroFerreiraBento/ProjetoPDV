@@ -1,5 +1,5 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, Users, Package, ShoppingCart, Settings, LogOut, Moon, Sun, Tag, Scale, Terminal } from 'lucide-react'
+import { LayoutDashboard, Users, Package, ShoppingCart, Settings, LogOut, Moon, Sun, Tag, Scale, Terminal, UserCircle, PackageCheck, Truck, ShoppingBag, Ticket, BarChart, Lock } from 'lucide-react'
 import { Button } from '@pos/ui'
 import { useSetupStore } from '../store/setup'
 import { useOperatorsStore } from '../store/operators'
@@ -8,7 +8,7 @@ import { FastSearch } from '../components/FastSearch'
 export function DashboardLayout() {
     const navigate = useNavigate()
     const { storeName, theme, setTheme } = useSetupStore()
-    const { currentOperator, logoutOperator } = useOperatorsStore()
+    const { currentOperator, logoutOperator, lockScreen } = useOperatorsStore()
 
     const handleLogout = () => {
         logoutOperator()
@@ -18,7 +18,13 @@ export function DashboardLayout() {
     const navItems = [
         { to: '/dashboard/overview', icon: LayoutDashboard, label: 'Overview' },
         { to: '/dashboard/sales', icon: ShoppingCart, label: 'Sales' },
+        { to: '/dashboard/reports', icon: BarChart, label: 'Reports' },
+        { to: '/dashboard/customers', icon: UserCircle, label: 'Customers' },
         { to: '/dashboard/products', icon: Package, label: 'Products' },
+        { to: '/dashboard/stock', icon: PackageCheck, label: 'Stock' },
+        { to: '/dashboard/suppliers', icon: Truck, label: 'Suppliers' },
+        { to: '/dashboard/purchases', icon: ShoppingBag, label: 'Purchases' },
+        { to: '/dashboard/coupons', icon: Ticket, label: 'Coupons' },
         { to: '/dashboard/categories', icon: Tag, label: 'Categories' },
         { to: '/dashboard/units', icon: Scale, label: 'Units' },
         { to: '/dashboard/users', icon: Users, label: 'Operators' },
@@ -67,13 +73,21 @@ export function DashboardLayout() {
                     <div className="flex items-center gap-4">
                         <Button
                             variant="default"
-                            className="mr-4 hidden sm:flex bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
+                            className="mr-4 hidden sm:flex bg-primary hover:bg-primary/90 text-white shadow-sm"
                             onClick={() => navigate('/pos')}
                         >
                             <Terminal className="w-4 h-4 mr-2" />
                             Open POS
                         </Button>
                         <FastSearch />
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => lockScreen()}
+                            title="Bloquear Tela"
+                        >
+                            <Lock className="h-5 w-5 text-slate-500" />
+                        </Button>
                         <Button
                             variant="ghost"
                             size="icon"
