@@ -20,15 +20,15 @@ import { useCategoriesStore } from '../../../store/categories'
 import { Category } from '@pos/shared'
 
 const CATEGORY_COLORS = [
-    { label: 'Gray', value: 'gray', hex: 'bg-gray-500' },
-    { label: 'Red', value: 'red', hex: 'bg-red-500' },
-    { label: 'Orange', value: 'orange', hex: 'bg-orange-500' },
-    { label: 'Yellow', value: 'yellow', hex: 'bg-yellow-500' },
-    { label: 'Green', value: 'green', hex: 'bg-green-500' },
-    { label: 'Blue', value: 'blue', hex: 'bg-blue-500' },
-    { label: 'Indigo', value: 'indigo', hex: 'bg-indigo-500' },
-    { label: 'Purple', value: 'purple', hex: 'bg-purple-500' },
-    { label: 'Pink', value: 'pink', hex: 'bg-pink-500' },
+    { label: 'Cinza', value: 'gray', hex: 'bg-gray-500' },
+    { label: 'Vermelho', value: 'red', hex: 'bg-red-500' },
+    { label: 'Laranja', value: 'orange', hex: 'bg-orange-500' },
+    { label: 'Amarelo', value: 'yellow', hex: 'bg-yellow-500' },
+    { label: 'Verde', value: 'green', hex: 'bg-green-500' },
+    { label: 'Azul', value: 'blue', hex: 'bg-blue-500' },
+    { label: 'Índigo', value: 'indigo', hex: 'bg-indigo-500' },
+    { label: 'Roxo', value: 'purple', hex: 'bg-purple-500' },
+    { label: 'Rosa', value: 'pink', hex: 'bg-pink-500' },
 ]
 
 export function CategoriesPage() {
@@ -64,7 +64,7 @@ export function CategoriesPage() {
     }
 
     const handleDelete = (id: string, name: string) => {
-        if (window.confirm(`Are you sure you want to delete the category "${name}"?`)) {
+        if (window.confirm(`Tem certeza que deseja excluir a categoria "${name}"?`)) {
             deleteCategory(id)
         }
     }
@@ -96,15 +96,15 @@ export function CategoriesPage() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-50">
-                        Categories
+                        Categorias
                     </h1>
                     <p className="text-muted-foreground mt-1">
-                        Organize your products into categories for easier navigation.
+                        Organize seus produtos em categorias para facilitar a navegação.
                     </p>
                 </div>
                 <Button onClick={handleOpenAdd} className="w-full sm:w-auto shadow-md">
                     <Plus className="h-4 w-4 mr-2" />
-                    Add Category
+                    Adicionar Categoria
                 </Button>
             </div>
 
@@ -113,7 +113,7 @@ export function CategoriesPage() {
                 <div className="relative flex-1 max-w-sm">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
-                        placeholder="Search categories..."
+                        placeholder="Buscar categorias..."
                         className="pl-9 bg-white dark:bg-zinc-900 shadow-sm"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
@@ -126,16 +126,16 @@ export function CategoriesPage() {
                 <Table>
                     <TableHeader>
                         <TableRow className="bg-slate-50/50 dark:bg-zinc-800/50 hover:bg-slate-50/50 dark:hover:bg-zinc-800/50">
-                            <TableHead className="w-[100px] font-semibold text-slate-900 dark:text-slate-300">Color</TableHead>
-                            <TableHead className="font-semibold text-slate-900 dark:text-slate-300">Name</TableHead>
-                            <TableHead className="font-semibold text-slate-900 dark:text-slate-300 text-right">Actions</TableHead>
+                            <TableHead className="w-[100px] font-semibold text-slate-900 dark:text-slate-300">Cor</TableHead>
+                            <TableHead className="font-semibold text-slate-900 dark:text-slate-300">Nome</TableHead>
+                            <TableHead className="font-semibold text-slate-900 dark:text-slate-300 text-right">Ações</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {filteredCategories.length === 0 ? (
                             <TableRow>
                                 <TableCell colSpan={3} className="h-24 text-center text-muted-foreground">
-                                    No categories found.
+                                    Nenhuma categoria encontrada.
                                 </TableCell>
                             </TableRow>
                         ) : (
@@ -178,11 +178,11 @@ export function CategoriesPage() {
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogContent className="sm:max-w-[425px]">
                     <DialogHeader>
-                        <DialogTitle>{editingCategory ? 'Edit Category' : 'Add New Category'}</DialogTitle>
+                        <DialogTitle>{editingCategory ? 'Editar Categoria' : 'Nova Categoria'}</DialogTitle>
                     </DialogHeader>
                     <form onSubmit={handleSubmit} className="space-y-6 pt-4">
                         <div className="space-y-2">
-                            <Label htmlFor="name">Category Name *</Label>
+                            <Label htmlFor="name">Nome da categoria *</Label>
                             <Input
                                 id="name"
                                 required
@@ -192,7 +192,7 @@ export function CategoriesPage() {
                             />
                         </div>
                         <div className="space-y-3">
-                            <Label>Category Color</Label>
+                            <Label>Cor da categoria</Label>
                             <div className="flex flex-wrap gap-3">
                                 {CATEGORY_COLORS.map((color) => (
                                     <button
@@ -202,16 +202,16 @@ export function CategoriesPage() {
                                         className={`w-8 h-8 rounded-full border-2 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-900 dark:focus:ring-slate-100 transition-all ${color.hex} ${formData.color === color.value ? 'border-slate-900 dark:border-white scale-110 shadow-md' : 'border-transparent hover:scale-105'
                                             }`}
                                         title={color.label}
-                                        aria-label={`Select ${color.label} color`}
+                                        aria-label={`Selecionar cor ${color.label}`}
                                     />
                                 ))}
                             </div>
                         </div>
                         <DialogFooter className="pt-4 mt-2 border-t border-slate-100 dark:border-zinc-800">
                             <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                                Cancel
+                                Cancelar
                             </Button>
-                            <Button type="submit">{editingCategory ? 'Save Changes' : 'Add Category'}</Button>
+                            <Button type="submit">{editingCategory ? 'Salvar Alterações' : 'Adicionar Categoria'}</Button>
                         </DialogFooter>
                     </form>
                 </DialogContent>

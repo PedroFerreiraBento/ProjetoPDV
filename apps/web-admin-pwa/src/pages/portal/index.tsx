@@ -40,25 +40,28 @@ export function PortalPage() {
     }
 
     const activeTerminals = terminals.filter(t => t.isActive)
+    const adminAvailableTerminals = terminals
     const linkedActiveTerminal = activeTerminals.find(t => t.id === linkedTerminalId)
+    const linkedDeviceTerminal = terminals.find(t => t.id === linkedTerminalId)
     const isAdmin = currentOperator?.role === 'ADMIN' && authMethod === 'PASSWORD'
-    const canAccessPos = !!currentOperator // All roles can access POS for now based on implementation plan
+    const canAccessPos = isAdmin || !!linkedDeviceTerminal
 
     useEffect(() => {
-        const hasSelectedActiveTerminal = activeTerminals.some(t => t.id === selectedTerminalId)
+        const terminalsForSelection = isAdmin ? adminAvailableTerminals : activeTerminals
+        const hasSelectedAvailableTerminal = terminalsForSelection.some(t => t.id === selectedTerminalId)
 
         if (isAdmin) {
-            if (hasSelectedActiveTerminal) {
+            if (hasSelectedAvailableTerminal) {
                 return
             }
 
-            if (linkedActiveTerminal) {
-                setSelectedTerminalId(linkedActiveTerminal.id)
+            if (linkedDeviceTerminal) {
+                setSelectedTerminalId(linkedDeviceTerminal.id)
                 return
             }
 
-            if (activeTerminals.length > 0) {
-                setSelectedTerminalId(activeTerminals[0].id)
+            if (adminAvailableTerminals.length > 0) {
+                setSelectedTerminalId(adminAvailableTerminals[0].id)
                 return
             }
 
@@ -76,10 +79,10 @@ export function PortalPage() {
             return
         }
 
-        if (!hasSelectedActiveTerminal) {
+        if (!hasSelectedAvailableTerminal) {
             setSelectedTerminalId('')
         }
-    }, [activeTerminals, isAdmin, linkedActiveTerminal, selectedTerminalId])
+    }, [activeTerminals, adminAvailableTerminals, isAdmin, linkedActiveTerminal, linkedDeviceTerminal, selectedTerminalId])
 
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-zinc-950 flex flex-col items-center justify-center p-4">
@@ -147,6 +150,15 @@ export function PortalPage() {
                             <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-bl-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-700" />
                         </button>
                     )}
+
+                    {!isAdmin && !canAccessPos && (
+                        <div className="w-full p-8 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-3xl text-left shadow-sm">
+                            <h2 className="text-xl font-bold text-slate-900 dark:text-slate-50 mb-2">Terminal nao configurado neste dispositivo</h2>
+                            <p className="text-slate-500 dark:text-zinc-400 leading-relaxed">
+                                Solicite que um administrador acesse com e-mail e senha para cadastrar este dispositivo como terminal.
+                            </p>
+                        </div>
+                    )}
                 </div>
             ) : (
                 <div className="w-full max-w-md animate-in zoom-in-95 duration-300">
@@ -170,13 +182,13 @@ export function PortalPage() {
                             <div className="space-y-2">
                                 <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Terminal Ativo</label>
                                 {isAdmin ? (
-                                    activeTerminals.length > 0 ? (
+                                    adminAvailableTerminals.length > 0 ? (
                                         <Select value={selectedTerminalId} onValueChange={setSelectedTerminalId}>
                                             <SelectTrigger className="h-14 w-full text-base bg-slate-50 dark:bg-zinc-800 border-slate-200 dark:border-zinc-700 rounded-xl focus:ring-emerald-500">
                                                 <SelectValue placeholder="Escolha um terminal" />
                                             </SelectTrigger>
                                             <SelectContent className="rounded-xl border-slate-200 dark:border-zinc-800">
-                                                {activeTerminals.map(terminal => {
+                                                {adminAvailableTerminals.map(terminal => {
                                                     const branch = branches.find(b => b.id === terminal.branchId)
                                                     return (
                                                         <SelectItem key={terminal.id} value={terminal.id} className="cursor-pointer py-3 rounded-lg focus:bg-emerald-50 dark:focus:bg-emerald-900/20">
@@ -186,6 +198,11 @@ export function PortalPage() {
                                                                     <Store className="h-3 w-3 mr-1" />
                                                                     {branch?.name || 'Filial Desconhecida'}
                                                                 </span>
+                                                                {!terminal.isActive && (
+                                                                    <span className="text-[10px] uppercase tracking-widest text-amber-600 font-bold mt-1">
+                                                                        Inativo
+                                                                    </span>
+                                                                )}
                                                             </div>
                                                         </SelectItem>
                                                     )
@@ -194,7 +211,7 @@ export function PortalPage() {
                                         </Select>
                                     ) : (
                                         <div className="text-sm text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/20 p-3 rounded-lg border border-amber-100 dark:border-amber-900/30">
-                                            Nenhum terminal ativo disponivel. Solicite que o administrador cadastre o dispositivo como terminal.
+                                            Nenhum terminal cadastrado. Cadastre um terminal no painel de configuracoes.
                                         </div>
                                     )
                                 ) : linkedActiveTerminal ? (
@@ -234,7 +251,7 @@ export function PortalPage() {
                                 )}
                             </div>
 
-                            {isAdmin && activeTerminals.length > 0 ? (
+                            {isAdmin && adminAvailableTerminals.length > 0 ? (
                                 <div className="space-y-2">
                                     <div className="flex items-center gap-3 px-1 py-1 group cursor-pointer" onClick={() => setShouldLinkDevice(!shouldLinkDevice)}>
                                         <div className={`w-10 h-6 rounded-full transition-colors relative flex items-center px-1 ${shouldLinkDevice ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-zinc-800'}`}>

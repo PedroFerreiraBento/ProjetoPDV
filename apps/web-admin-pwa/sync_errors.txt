@@ -1,0 +1,1 @@
+src/store/sync.ts(45,63): error TS2339: Property 'branches' does not exist on type 'SetupState'.

@@ -15,9 +15,36 @@ export interface Operator {
     email?: string // For Admin login
     password?: string // For Admin login
     createdAt: string
+    updatedAt?: string
 }
 
 export type AuthMethod = 'PIN' | 'PASSWORD' | null
+
+const TERMINAL_OFFLINE_STORAGE_KEYS = [
+    'pos-cart-storage',
+    'pos-cash-register',
+    'pos-sales-storage',
+    'pos-stock-storage',
+    'pos-products-store',
+    'pos-customers',
+    'pos-coupons-storage',
+    'pos-terminals',
+    'pos-settings',
+    'pos-sync-storage',
+    'pos-audit-storage',
+    'pos-categories-store',
+    'pos-units-store',
+    'pos-branches',
+    'pos-suppliers-storage',
+    'pos-purchases-storage'
+]
+
+const clearTerminalOfflineCache = () => {
+    if (typeof window === 'undefined') return
+    for (const key of TERMINAL_OFFLINE_STORAGE_KEYS) {
+        window.localStorage.removeItem(key)
+    }
+}
 
 interface OperatorsState {
     operators: Operator[]
@@ -37,18 +64,7 @@ interface OperatorsState {
 export const useOperatorsStore = create<OperatorsState>()(
     persist(
         (set) => ({
-            operators: [
-                // Default Admin Operator
-                {
-                    id: 'admin-1',
-                    name: 'Admin',
-                    role: 'ADMIN',
-                    email: 'admin@sistema.com',
-                    password: 'admin123',
-                    pin: '1234',
-                    createdAt: new Date().toISOString(),
-                },
-            ],
+            operators: [],
             currentOperator: null,
             authMethod: null,
             addOperator: (newOp) =>
@@ -59,6 +75,7 @@ export const useOperatorsStore = create<OperatorsState>()(
                             ...newOp,
                             id: crypto.randomUUID(),
                             createdAt: new Date().toISOString(),
+                            updatedAt: new Date().toISOString(),
                         },
                     ],
                 })),
@@ -69,7 +86,7 @@ export const useOperatorsStore = create<OperatorsState>()(
             updateOperatorRole: (id, newRole) =>
                 set((state) => ({
                     operators: state.operators.map((op) =>
-                        op.id === id ? { ...op, role: newRole } : op
+                        op.id === id ? { ...op, role: newRole, updatedAt: new Date().toISOString() } : op
                     ),
                 })),
             loginOperator: (id, pin) => {
@@ -89,16 +106,6 @@ export const useOperatorsStore = create<OperatorsState>()(
                 const cleanPassword = password.trim()
                 let success = false
 
-                // Hardcoded fallback for the initial admin account to ensure access after refactoring
-                if (cleanEmail === 'admin@sistema.com' && cleanPassword === 'admin123') {
-                    success = true
-                    set((state) => {
-                        const adminOp = state.operators.find(op => op.id === 'admin-1' || op.role === 'ADMIN') || state.operators[0]
-                        return { currentOperator: adminOp, authMethod: 'PASSWORD', isLocked: false }
-                    })
-                    return true
-                }
-
                 set((state) => {
                     const operator = state.operators.find((op) =>
                         op.role === 'ADMIN' &&
@@ -106,6 +113,7 @@ export const useOperatorsStore = create<OperatorsState>()(
                         op.password?.trim() === cleanPassword
                     )
                     if (operator) {
+                        clearTerminalOfflineCache()
                         success = true
                         return { currentOperator: operator, authMethod: 'PASSWORD', isLocked: false }
                     }

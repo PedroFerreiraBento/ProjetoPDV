@@ -55,7 +55,7 @@ export function UnitsPage() {
     }
 
     const handleDelete = (id: string, name: string) => {
-        if (window.confirm(`Are you sure you want to delete the unit "${name}"?`)) {
+        if (window.confirm(`Tem certeza que deseja excluir a unidade "${name}"?`)) {
             deleteUnit(id)
         }
     }
@@ -85,15 +85,15 @@ export function UnitsPage() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-50">
-                        Measurement Units
+                        Unidades de Medida
                     </h1>
                     <p className="text-muted-foreground mt-1">
-                        Manage how your products are sold (e.g., kg, liters, units).
+                        Defina como os produtos são vendidos (ex.: kg, litros, unidade).
                     </p>
                 </div>
                 <Button onClick={handleOpenAdd} className="w-full sm:w-auto shadow-md">
                     <Plus className="h-4 w-4 mr-2" />
-                    Add Unit
+                    Adicionar Unidade
                 </Button>
             </div>
 
@@ -102,7 +102,7 @@ export function UnitsPage() {
                 <div className="relative flex-1 max-w-sm">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
-                        placeholder="Search units..."
+                        placeholder="Buscar unidades..."
                         className="pl-9 bg-white dark:bg-zinc-900 shadow-sm"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
@@ -115,17 +115,17 @@ export function UnitsPage() {
                 <Table>
                     <TableHeader>
                         <TableRow className="bg-slate-50/50 dark:bg-zinc-800/50 hover:bg-slate-50/50 dark:hover:bg-zinc-800/50">
-                            <TableHead className="font-semibold text-slate-900 dark:text-slate-300">Name</TableHead>
-                            <TableHead className="font-semibold text-slate-900 dark:text-slate-300">Abbreviation</TableHead>
-                            <TableHead className="font-semibold text-slate-900 dark:text-slate-300">Allows Decimal</TableHead>
-                            <TableHead className="font-semibold text-slate-900 dark:text-slate-300 text-right">Actions</TableHead>
+                            <TableHead className="font-semibold text-slate-900 dark:text-slate-300">Nome</TableHead>
+                            <TableHead className="font-semibold text-slate-900 dark:text-slate-300">Abreviação</TableHead>
+                            <TableHead className="font-semibold text-slate-900 dark:text-slate-300">Permite decimal</TableHead>
+                            <TableHead className="font-semibold text-slate-900 dark:text-slate-300 text-right">Ações</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {filteredUnits.length === 0 ? (
                             <TableRow>
                                 <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
-                                    No units found.
+                                    Nenhuma unidade encontrada.
                                 </TableCell>
                             </TableRow>
                         ) : (
@@ -141,12 +141,12 @@ export function UnitsPage() {
                                     </TableCell>
                                     <TableCell>
                                         {unit.allowFractions ? (
-                                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400">
-                                                Yes (e.g. 1.5)
+                                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400">
+                                                Sim (ex.: 1,5)
                                             </span>
                                         ) : (
                                             <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-400">
-                                                No (e.g. 1, 2)
+                                                Não (ex.: 1, 2)
                                             </span>
                                         )}
                                     </TableCell>
@@ -181,12 +181,12 @@ export function UnitsPage() {
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogContent className="sm:max-w-[425px]">
                     <DialogHeader>
-                        <DialogTitle>{editingUnit ? 'Edit Unit' : 'Add New Unit'}</DialogTitle>
+                        <DialogTitle>{editingUnit ? 'Editar Unidade' : 'Nova Unidade'}</DialogTitle>
                     </DialogHeader>
                     <form onSubmit={handleSubmit} className="space-y-6 pt-4">
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <Label htmlFor="name">Unit Name *</Label>
+                                <Label htmlFor="name">Nome da unidade *</Label>
                                 <Input
                                     id="name"
                                     required
@@ -196,7 +196,7 @@ export function UnitsPage() {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="abbreviation">Abbreviation *</Label>
+                                <Label htmlFor="abbreviation">Abreviação *</Label>
                                 <Input
                                     id="abbreviation"
                                     required
@@ -216,18 +216,18 @@ export function UnitsPage() {
                                     onChange={(e) => setFormData({ ...formData, allowFractions: e.target.checked })}
                                 />
                                 <Label htmlFor="allowFractions" className="cursor-pointer font-normal">
-                                    Allow decimals (fractions) for this unit
+                                    Permitir decimais (frações) para esta unidade
                                 </Label>
                             </div>
                             <p className="text-xs text-muted-foreground pl-6">
-                                Enable this for weights (e.g. 1.5 kg). Disable for discrete items (e.g. 2 un).
+                                Ative para pesos (ex.: 1,5 kg). Desative para itens discretos (ex.: 2 un).
                             </p>
                         </div>
                         <DialogFooter className="pt-4 mt-2 border-t border-slate-100 dark:border-zinc-800">
                             <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                                Cancel
+                                Cancelar
                             </Button>
-                            <Button type="submit">{editingUnit ? 'Save Changes' : 'Add Unit'}</Button>
+                            <Button type="submit">{editingUnit ? 'Salvar Alterações' : 'Adicionar Unidade'}</Button>
                         </DialogFooter>
                     </form>
                 </DialogContent>

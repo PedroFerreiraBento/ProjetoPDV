@@ -1,0 +1,6 @@
+src/components/SettleCreditModal.tsx(2,10): error TS6133: 'Card' is declared but its value is never read.
+src/components/SettleCreditModal.tsx(2,24): error TS6133: 'Input' is declared but its value is never read.
+src/components/SettleCreditModal.tsx(3,31): error TS6133: 'SalePayment' is declared but its value is never read.
+src/components/SettleCreditModal.tsx(20,11): error TS6133: 'storeName' is declared but its value is never read.
+src/lib/receipt.ts(45,15): error TS2741: Property '[PaymentMethod.CREDIT]' is missing in type '{ MONEY: string; PIX: string; CREDIT_CARD: string; DEBIT_CARD: string; }' but required in type 'Record<PaymentMethod, string>'.
+src/pages/pos/index.tsx(9,1): error TS6133: 'useSetupStore' is declared but its value is never read.

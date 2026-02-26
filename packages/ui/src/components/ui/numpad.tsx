@@ -6,9 +6,10 @@ interface NumpadProps {
     onBackspace: () => void
     maxLength?: number
     currentLength?: number
+    showDecimal?: boolean
 }
 
-export function Numpad({ onKeyPress, onBackspace, maxLength = 4, currentLength = 0 }: NumpadProps) {
+export function Numpad({ onKeyPress, onBackspace, maxLength = 10, currentLength = 0, showDecimal = false }: NumpadProps) {
     const handleKeyClick = (key: string) => {
         if (currentLength < maxLength) {
             onKeyPress(key)
@@ -25,7 +26,7 @@ export function Numpad({ onKeyPress, onBackspace, maxLength = 4, currentLength =
         { label: '7', value: '7' },
         { label: '8', value: '8' },
         { label: '9', value: '9' },
-        { label: '', value: '' },
+        { label: showDecimal ? ',' : '', value: showDecimal ? ',' : '' },
         { label: '0', value: '0' },
     ]
 

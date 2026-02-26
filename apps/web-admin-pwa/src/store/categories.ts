@@ -1,6 +1,8 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
 import { Category } from '@pos/shared'
+import { useAuditStore } from './audit'
+import { useOperatorsStore } from './operators'
+import { useBranchesStore } from './branches'
 
 interface CategoriesState {
     categories: Category[]
@@ -10,65 +12,81 @@ interface CategoriesState {
 }
 
 export const useCategoriesStore = create<CategoriesState>()(
-    persist(
-        (set) => ({
-            categories: [
-                {
-                    id: 'cat-1',
-                    name: 'Bebidas Quentes',
-                    color: 'orange',
-                    createdAt: new Date().toISOString(),
-                    updatedAt: new Date().toISOString(),
-                },
-                {
-                    id: 'cat-2',
-                    name: 'Bebidas Geladas',
-                    color: 'blue',
-                    createdAt: new Date().toISOString(),
-                    updatedAt: new Date().toISOString(),
-                },
-                {
-                    id: 'cat-3',
-                    name: 'Salgados',
-                    color: 'yellow',
-                    createdAt: new Date().toISOString(),
-                    updatedAt: new Date().toISOString(),
-                },
-                {
-                    id: 'cat-4',
-                    name: 'Doces & Sobremesas',
-                    color: 'pink',
-                    createdAt: new Date().toISOString(),
-                    updatedAt: new Date().toISOString(),
-                }
-            ],
+    (set) => ({
+            categories: [],
             addCategory: (newCat) =>
-                set((state) => ({
-                    categories: [
-                        ...state.categories,
-                        {
-                            ...newCat,
-                            id: crypto.randomUUID(),
-                            createdAt: new Date().toISOString(),
-                            updatedAt: new Date().toISOString(),
-                        },
-                    ],
-                })),
+                set((state) => {
+                    const id = crypto.randomUUID()
+                    const createdAt = new Date().toISOString()
+                    const updatedAt = createdAt
+                    const category = { ...newCat, id, createdAt, updatedAt } as Category
+
+                    const operator = useOperatorsStore.getState().currentOperator
+                    const branchId = useBranchesStore.getState().currentBranchId
+
+                    if (operator) {
+                        useAuditStore.getState().logChange({
+                            entity: 'category',
+                            action: 'CREATE',
+                            newData: category,
+                            operatorId: operator.id,
+                            operatorName: operator.name,
+                            branchId: branchId || undefined
+                        })
+                    }
+
+                    return {
+                        categories: [...state.categories, category],
+                    }
+                }),
             updateCategory: (id, updatedFields) =>
-                set((state) => ({
-                    categories: state.categories.map((cat) =>
-                        cat.id === id
-                            ? { ...cat, ...updatedFields, updatedAt: new Date().toISOString() }
-                            : cat
-                    ),
-                })),
+                set((state) => {
+                    const oldCat = state.categories.find(c => c.id === id)
+                    if (!oldCat) return state
+
+                    const newCat = { ...oldCat, ...updatedFields, updatedAt: new Date().toISOString() }
+
+                    const operator = useOperatorsStore.getState().currentOperator
+                    const branchId = useBranchesStore.getState().currentBranchId
+
+                    if (operator) {
+                        useAuditStore.getState().logChange({
+                            entity: 'category',
+                            action: 'UPDATE',
+                            oldData: oldCat,
+                            newData: newCat,
+                            operatorId: operator.id,
+                            operatorName: operator.name,
+                            branchId: branchId || undefined
+                        })
+                    }
+
+                    return {
+                        categories: state.categories.map((cat) => cat.id === id ? newCat : cat),
+                    }
+                }),
             deleteCategory: (id) =>
-                set((state) => ({
-                    categories: state.categories.filter((cat) => cat.id !== id),
-                })),
-        }),
-        {
-            name: 'pos-categories-store',
-        }
-    )
+                set((state) => {
+                    const oldCat = state.categories.find(c => c.id === id)
+                    if (!oldCat) return state
+
+                    const operator = useOperatorsStore.getState().currentOperator
+                    const branchId = useBranchesStore.getState().currentBranchId
+
+                    if (operator) {
+                        useAuditStore.getState().logChange({
+                            entity: 'category',
+                            action: 'DELETE',
+                            oldData: oldCat,
+                            operatorId: operator.id,
+                            operatorName: operator.name,
+                            branchId: branchId || undefined
+                        })
+                    }
+
+                    return {
+                        categories: state.categories.filter((cat) => cat.id !== id),
+                    }
+                }),
+        })
 )

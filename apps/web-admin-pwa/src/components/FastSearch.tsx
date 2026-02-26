@@ -61,7 +61,7 @@ export function FastSearch() {
                 onClick={() => setIsOpen(true)}
             >
                 <Search className="h-4 w-4 xl:mr-2 lg:mr-2" />
-                <span className="hidden lg:inline-flex">Search products...</span>
+                <span className="hidden lg:inline-flex">Buscar produtos...</span>
                 <kbd className="pointer-events-none absolute right-1.5 top-2 hidden h-6 select-none items-center gap-1 rounded border bg-slate-100 px-1.5 font-mono text-[10px] font-medium opacity-100 xl:flex dark:bg-zinc-800">
                     <span className="text-xs">⌘</span>K
                 </kbd>
@@ -73,7 +73,7 @@ export function FastSearch() {
                         <Search className="mr-2 h-5 w-5 shrink-0 opacity-50 text-slate-500" />
                         <input
                             className="flex h-14 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-slate-500 disabled:cursor-not-allowed disabled:opacity-50 dark:placeholder:text-slate-400 text-slate-900 dark:text-slate-50"
-                            placeholder="Type a product name, SKU or barcode..."
+                            placeholder="Digite o nome do produto, SKU ou código de barras..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             // eslint-disable-next-line jsx-a11y/no-autofocus
@@ -83,11 +83,11 @@ export function FastSearch() {
                     <div className="max-h-[300px] overflow-y-auto p-2">
                         {searchQuery === '' ? (
                             <p className="p-4 text-center text-sm text-slate-500 dark:text-slate-400">
-                                Start typing to search your catalog.
+                                Comece a digitar para buscar no catálogo.
                             </p>
                         ) : results.length === 0 ? (
                             <p className="p-4 text-center text-sm text-slate-500 dark:text-slate-400">
-                                No products found.
+                                Nenhum produto encontrado.
                             </p>
                         ) : (
                             <div className="flex flex-col gap-1">

@@ -24,6 +24,7 @@ import { SaleAdjustmentsModal } from '../../components/SaleAdjustmentsModal'
 import { TerminalSelector } from '../../components/TerminalSelector'
 import { CashControlModal } from '../../components/CashControlModal'
 import { MySalesModal } from '../../components/MySalesModal'
+import { PendingCreditSalesModal } from '../../components/PendingCreditSalesModal'
 
 export function PosPage() {
     const navigate = useNavigate()
@@ -36,7 +37,7 @@ export function PosPage() {
         customerCpf, observation, updateItem, setSaleAdjustments
     } = useCartStore()
 
-    const { addSale } = useSalesStore()
+    const { addSale, sales } = useSalesStore()
     const { scaleBarcodePrefix, scaleItemCodeLength, scaleValueType } = useSettingsStore()
 
     const { currentTerminalId, terminals } = useTerminalsStore()
@@ -54,6 +55,7 @@ export function PosPage() {
     const [isAdjustmentsModalOpen, setIsAdjustmentsModalOpen] = useState(false)
     const [isCashModalOpen, setIsCashModalOpen] = useState(false)
     const [isMySalesOpen, setIsMySalesOpen] = useState(false)
+    const [isPendingCreditOpen, setIsPendingCreditOpen] = useState(false)
     const [cashMode, setCashMode] = useState<'OPEN' | 'CLOSE' | 'BLEED' | 'SUPPLY'>('OPEN')
 
     const [selectedCartItemId, setSelectedCartItemId] = useState<string | null>(null)
@@ -69,6 +71,16 @@ export function PosPage() {
             (p.sku && p.sku.toLowerCase().includes(lowerTerm))
         ).slice(0, 50)
     }, [searchTerm, products, favoriteProducts])
+
+    const pendingCreditCount = useMemo(() => {
+        if (!currentTerminalId) return 0
+        return sales.filter((sale) =>
+            sale.terminalId === currentTerminalId &&
+            sale.status === 'COMPLETED' &&
+            sale.payments.some((p) => p.method === PaymentMethod.CREDIT) &&
+            !sale.creditSettledAt
+        ).length
+    }, [sales, currentTerminalId])
 
     const handleScan = (barcode: string) => {
         const cleanBarcode = barcode.trim()
@@ -310,14 +322,31 @@ export function PosPage() {
                             <div className="h-6 w-px bg-slate-200 dark:bg-zinc-800 mx-1" />
 
                             {!activeSession ? (
-                                <Button
-                                    size="sm"
-                                    className="bg-primary hover:bg-primary/90 text-white"
-                                    onClick={() => { setCashMode('OPEN'); setIsCashModalOpen(true); }}
-                                >
-                                    <Unlock className="h-4 w-4 mr-2" />
-                                    Abrir Caixa
-                                </Button>
+                                <div className="flex items-center gap-2">
+                                    <Button
+                                        size="sm"
+                                        className="bg-primary hover:bg-primary/90 text-white"
+                                        onClick={() => { setCashMode('OPEN'); setIsCashModalOpen(true); }}
+                                    >
+                                        <Unlock className="h-4 w-4 mr-2" />
+                                        Abrir Caixa
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="relative h-9 border-slate-200 text-slate-600 dark:text-slate-300 dark:border-zinc-800"
+                                        onClick={() => setIsPendingCreditOpen(true)}
+                                        title="Fiados Pendentes"
+                                    >
+                                        <Banknote className="h-4 w-4 mr-2" />
+                                        Fiados
+                                        {pendingCreditCount > 0 && (
+                                            <span className="absolute -top-2 -right-2 inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full text-[10px] font-bold bg-red-600 text-white shadow-sm">
+                                                {pendingCreditCount}
+                                            </span>
+                                        )}
+                                    </Button>
+                                </div>
                             ) : (
                                 <div className="flex items-center gap-2">
                                     <div className="flex flex-col items-end mr-2">
@@ -354,6 +383,21 @@ export function PosPage() {
                                         title="Minhas Vendas Recentes"
                                     >
                                         <Clock className="h-5 w-5" />
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="relative h-9 border-slate-200 text-slate-600 dark:text-slate-300 dark:border-zinc-800"
+                                        onClick={() => setIsPendingCreditOpen(true)}
+                                        title="Fiados Pendentes"
+                                    >
+                                        <Banknote className="h-4 w-4 mr-2" />
+                                        Fiados
+                                        {pendingCreditCount > 0 && (
+                                            <span className="absolute -top-2 -right-2 inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full text-[10px] font-bold bg-red-600 text-white shadow-sm">
+                                                {pendingCreditCount}
+                                            </span>
+                                        )}
                                     </Button>
                                 </div>
                             )}
@@ -595,6 +639,12 @@ export function PosPage() {
             <MySalesModal
                 isOpen={isMySalesOpen}
                 onOpenChange={setIsMySalesOpen}
+            />
+
+            <PendingCreditSalesModal
+                isOpen={isPendingCreditOpen}
+                onOpenChange={setIsPendingCreditOpen}
+                terminalId={currentTerminalId}
             />
         </>
     )

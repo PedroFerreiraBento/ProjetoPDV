@@ -51,9 +51,9 @@ export function CameraScannerModal({ isOpen, onClose, onScan }: CameraScannerMod
                     onScan(decodedText)
                     onClose()
                 },
-                (errorMessage) => {
+                (_errorMessage) => {
                     // On error, usually just means no barcode in frame yet
-                    // console.warn(errorMessage)
+                    // console.warn(_errorMessage)
                 }
             )
         } catch (err: any) {

@@ -20,15 +20,17 @@ export function LoginPage() {
     const [password, setPassword] = useState('')
     const [loginError, setLoginError] = useState<string | null>(null)
     const [isLoading, setIsLoading] = useState(false)
+    const linkedTerminal = terminals.find(t => t.id === linkedTerminalId)
+    const hasLinkedTerminal = !!linkedTerminal
 
     // Automatically set mode to TERMINAL if a terminal ID is linked, otherwise CHOICE
     useEffect(() => {
-        if (linkedTerminalId) {
+        if (hasLinkedTerminal) {
             setMode('TERMINAL')
         } else {
             setMode('CHOICE')
         }
-    }, [linkedTerminalId])
+    }, [hasLinkedTerminal])
 
     const handleAdminLogin = (e: React.FormEvent) => {
         e.preventDefault()
@@ -104,8 +106,6 @@ export function LoginPage() {
         return () => window.removeEventListener('keydown', handleKeyDown)
     }, [mode, selectedOperator, pin])
 
-    const linkedTerminal = terminals.find(t => t.id === linkedTerminalId)
-
     const getRoleIcon = (role: AppRole) => {
         switch (role) {
             case 'ADMIN': return <ShieldAlert className="h-6 w-6" />
@@ -135,7 +135,7 @@ export function LoginPage() {
                 </div>
 
                 {mode === 'CHOICE' && (
-                    <div className="grid md:grid-cols-2 gap-6 animate-in fade-in zoom-in-95 duration-500">
+                    <div className={`grid ${hasLinkedTerminal ? 'md:grid-cols-2' : 'max-w-xl mx-auto'} gap-6 animate-in fade-in zoom-in-95 duration-500`}>
                         {/* Admin Choice Card */}
                         <button
                             onClick={() => setMode('ADMIN')}
@@ -160,27 +160,29 @@ export function LoginPage() {
                         </button>
 
                         {/* Terminal Choice Card */}
-                        <button
-                            onClick={() => setMode('TERMINAL')}
-                            className="group relative flex flex-col items-start p-8 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-[32px] text-left transition-all hover:border-primary/50 hover:shadow-2xl hover:shadow-primary/5 hover:-translate-y-1 active:scale-[0.98]"
-                        >
-                            <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary mb-6 group-hover:bg-primary group-hover:text-white transition-all duration-300">
-                                <Monitor className="h-7 w-7" />
-                            </div>
-                            <div className="space-y-2">
-                                <div className="flex items-center gap-2">
-                                    <h3 className="text-2xl font-black text-slate-900 dark:text-zinc-50 tracking-tight">Terminal PDV</h3>
-                                    <WifiOff className="h-4 w-4 text-slate-400" />
+                        {hasLinkedTerminal && (
+                            <button
+                                onClick={() => setMode('TERMINAL')}
+                                className="group relative flex flex-col items-start p-8 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-[32px] text-left transition-all hover:border-primary/50 hover:shadow-2xl hover:shadow-primary/5 hover:-translate-y-1 active:scale-[0.98]"
+                            >
+                                <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary mb-6 group-hover:bg-primary group-hover:text-white transition-all duration-300">
+                                    <Monitor className="h-7 w-7" />
                                 </div>
-                                <p className="text-slate-500 dark:text-zinc-400 leading-relaxed">
-                                    Acesso rápido para caixas. Realize vendas e controle sangrias (funciona offline).
-                                </p>
-                            </div>
-                            <div className="mt-8 flex items-center text-primary font-bold text-sm uppercase tracking-widest gap-2">
-                                Identificar Operador <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                            </div>
-                            <div className="absolute top-4 right-4 h-2 w-2 rounded-full bg-primary shadow-[0_0_12px_rgba(255,122,26,0.5)]" />
-                        </button>
+                                <div className="space-y-2">
+                                    <div className="flex items-center gap-2">
+                                        <h3 className="text-2xl font-black text-slate-900 dark:text-zinc-50 tracking-tight">Terminal PDV</h3>
+                                        <WifiOff className="h-4 w-4 text-slate-400" />
+                                    </div>
+                                    <p className="text-slate-500 dark:text-zinc-400 leading-relaxed">
+                                        Acesso rápido para caixas. Realize vendas e controle sangrias (funciona offline).
+                                    </p>
+                                </div>
+                                <div className="mt-8 flex items-center text-primary font-bold text-sm uppercase tracking-widest gap-2">
+                                    Identificar Operador <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                                </div>
+                                <div className="absolute top-4 right-4 h-2 w-2 rounded-full bg-primary shadow-[0_0_12px_rgba(255,122,26,0.5)]" />
+                            </button>
+                        )}
                     </div>
                 )}
 

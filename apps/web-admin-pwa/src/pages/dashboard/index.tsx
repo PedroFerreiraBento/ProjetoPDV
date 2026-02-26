@@ -1,4 +1,4 @@
-export function OverviewPage() { return <div>Overview Page(Coming soon) </div> }
-export function SalesPage() { return <div>Sales Page(Coming soon) </div> }
-export function ProductsPage() { return <div>Products Page(Coming soon) </div> }
-export function SettingsPage() { return <div>Settings Page(Coming soon) </div> }
+export function OverviewPage() { return <div>Página de Visão Geral (em breve)</div> }
+export function SalesPage() { return <div>Página de Vendas (em breve)</div> }
+export function ProductsPage() { return <div>Página de Produtos (em breve)</div> }
+export function SettingsPage() { return <div>Página de Configurações (em breve)</div> }

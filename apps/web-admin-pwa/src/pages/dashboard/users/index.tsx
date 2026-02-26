@@ -41,56 +41,56 @@ export function UsersPage() {
         <div className="space-y-6 max-w-5xl mx-auto">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Operators</h1>
-                    <p className="text-muted-foreground mt-1">Manage users who can access the PDV and Admin panel.</p>
+                    <h1 className="text-3xl font-bold tracking-tight">Operadores</h1>
+                    <p className="text-muted-foreground mt-1">Gerencie usuários com acesso ao PDV e ao painel administrativo.</p>
                 </div>
 
                 <Dialog open={isOpen} onOpenChange={setIsOpen}>
                     <DialogTrigger asChild>
                         <Button>
                             <Plus className="h-4 w-4 mr-2" />
-                            Add Operator
+                            Adicionar Operador
                         </Button>
                     </DialogTrigger>
                     <DialogContent className="sm:max-w-[425px]">
                         <DialogHeader>
-                            <DialogTitle>Add New Operator</DialogTitle>
+                            <DialogTitle>Novo Operador</DialogTitle>
                             <DialogDescription>
-                                Create a new user who can access the PDV app or Web Admin.
+                                Crie um novo usuário com acesso ao PDV ou ao painel web.
                             </DialogDescription>
                         </DialogHeader>
                         <div className="grid gap-4 py-4">
                             <div className="grid grid-cols-4 items-center gap-4">
-                                <Label htmlFor="name" className="text-right">Name</Label>
-                                <Input id="name" value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="John Doe" className="col-span-3" />
+                                <Label htmlFor="name" className="text-right">Nome</Label>
+                                <Input id="name" value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="João da Silva" className="col-span-3" />
                             </div>
                             <div className="grid grid-cols-4 items-center gap-4">
                                 <Label htmlFor="pin" className="text-right">PIN</Label>
                                 <Input id="pin" type="password" value={newPin} onChange={(e) => setNewPin(e.target.value)} placeholder="1234" maxLength={4} className="col-span-3" />
                             </div>
                             <div className="grid grid-cols-4 items-center gap-4">
-                                <Label htmlFor="role" className="text-right">Role</Label>
+                                <Label htmlFor="role" className="text-right">Perfil</Label>
                                 <div className="col-span-3 flex gap-2">
                                     <Button
                                         variant="outline"
                                         className={`flex-1 ${newRole === 'ADMIN' ? 'bg-primary/10 text-primary border-primary' : 'text-muted-foreground'}`}
                                         onClick={() => setNewRole('ADMIN')}
-                                    >Admin</Button>
+                                    >Administrador</Button>
                                     <Button
                                         variant="outline"
                                         className={`flex-1 ${newRole === 'MANAGER' ? 'bg-primary/10 text-primary border-primary' : 'text-muted-foreground'}`}
                                         onClick={() => setNewRole('MANAGER')}
-                                    >Manager</Button>
+                                    >Gerente</Button>
                                     <Button
                                         variant="outline"
                                         className={`flex-1 ${newRole === 'CASHIER' ? 'bg-primary/10 text-primary border-primary' : 'text-muted-foreground'}`}
                                         onClick={() => setNewRole('CASHIER')}
-                                    >Cashier</Button>
+                                    >Operador</Button>
                                 </div>
                             </div>
                         </div>
                         <DialogFooter>
-                            <Button type="submit" onClick={handleAddOperator}>Save Operator</Button>
+                            <Button type="submit" onClick={handleAddOperator}>Salvar Operador</Button>
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
@@ -102,10 +102,10 @@ export function UsersPage() {
                         <table className="w-full text-sm text-left">
                             <thead className="bg-slate-50 dark:bg-zinc-800/50 text-slate-500 dark:text-slate-400 border-b dark:border-zinc-800">
                                 <tr>
-                                    <th className="px-6 py-4 font-medium">Name</th>
-                                    <th className="px-6 py-4 font-medium">Role</th>
+                                    <th className="px-6 py-4 font-medium">Nome</th>
+                                    <th className="px-6 py-4 font-medium">Perfil</th>
                                     <th className="px-6 py-4 font-medium">PIN</th>
-                                    <th className="px-6 py-4 font-medium text-right">Actions</th>
+                                    <th className="px-6 py-4 font-medium text-right">Ações</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y dark:divide-zinc-800">
@@ -133,44 +133,44 @@ export function UsersPage() {
             </Card>
             <Card className="dark:bg-zinc-900 border-none shadow-md mt-6">
                 <CardHeader>
-                    <CardTitle className="text-lg">Capabilities Matrix</CardTitle>
-                    <p className="text-sm text-muted-foreground">Overview of what each role can access in the system.</p>
+                    <CardTitle className="text-lg">Matriz de Permissões</CardTitle>
+                    <p className="text-sm text-muted-foreground">Visão geral do que cada perfil pode acessar no sistema.</p>
                 </CardHeader>
                 <CardContent className="p-0">
                     <div className="w-full overflow-auto">
                         <table className="w-full text-sm text-left">
                             <thead className="bg-slate-50 dark:bg-zinc-800/50 text-slate-500 dark:text-slate-400 border-b dark:border-zinc-800">
                                 <tr>
-                                    <th className="px-6 py-4 font-medium">Capability</th>
-                                    <th className="px-6 py-4 font-medium text-center">Admin</th>
-                                    <th className="px-6 py-4 font-medium text-center">Manager</th>
-                                    <th className="px-6 py-4 font-medium text-center">Cashier</th>
+                                    <th className="px-6 py-4 font-medium">Permissão</th>
+                                    <th className="px-6 py-4 font-medium text-center">Administrador</th>
+                                    <th className="px-6 py-4 font-medium text-center">Gerente</th>
+                                    <th className="px-6 py-4 font-medium text-center">Operador</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y dark:divide-zinc-800">
                                 {Object.values({
-                                    'Manage Staff & Operators': 'MANAGE_USERS',
-                                    'Manage Store Settings': 'MANAGE_SETTINGS',
-                                    'Create & Edit Products': 'MANAGE_PRODUCTS',
-                                    'View Products Directory': 'VIEW_PRODUCTS',
-                                    'Create New Sales': 'CREATE_SALE',
-                                    'Void/Cancel Sales': 'VOID_SALE',
-                                    'Apply Discounts': 'APPLY_DISCOUNT',
-                                    'Open Cash Register': 'OPEN_REGISTER',
-                                    'Close Cash Register': 'CLOSE_REGISTER',
-                                    'View Financial Reports': 'VIEW_REPORTS',
+                                    'Gerenciar equipe e operadores': 'MANAGE_USERS',
+                                    'Gerenciar configurações da loja': 'MANAGE_SETTINGS',
+                                    'Criar e editar produtos': 'MANAGE_PRODUCTS',
+                                    'Visualizar catálogo de produtos': 'VIEW_PRODUCTS',
+                                    'Criar novas vendas': 'CREATE_SALE',
+                                    'Cancelar vendas': 'VOID_SALE',
+                                    'Aplicar descontos': 'APPLY_DISCOUNT',
+                                    'Abrir caixa': 'OPEN_REGISTER',
+                                    'Fechar caixa': 'CLOSE_REGISTER',
+                                    'Visualizar relatórios financeiros': 'VIEW_REPORTS',
                                 } as Record<string, AppPermission>).map((permission, index) => {
                                     const labels = Object.keys({
-                                        'Manage Staff & Operators': 'MANAGE_USERS',
-                                        'Manage Store Settings': 'MANAGE_SETTINGS',
-                                        'Create & Edit Products': 'MANAGE_PRODUCTS',
-                                        'View Products Directory': 'VIEW_PRODUCTS',
-                                        'Create New Sales': 'CREATE_SALE',
-                                        'Void/Cancel Sales': 'VOID_SALE',
-                                        'Apply Discounts': 'APPLY_DISCOUNT',
-                                        'Open Cash Register': 'OPEN_REGISTER',
-                                        'Close Cash Register': 'CLOSE_REGISTER',
-                                        'View Financial Reports': 'VIEW_REPORTS',
+                                        'Gerenciar equipe e operadores': 'MANAGE_USERS',
+                                        'Gerenciar configurações da loja': 'MANAGE_SETTINGS',
+                                        'Criar e editar produtos': 'MANAGE_PRODUCTS',
+                                        'Visualizar catálogo de produtos': 'VIEW_PRODUCTS',
+                                        'Criar novas vendas': 'CREATE_SALE',
+                                        'Cancelar vendas': 'VOID_SALE',
+                                        'Aplicar descontos': 'APPLY_DISCOUNT',
+                                        'Abrir caixa': 'OPEN_REGISTER',
+                                        'Fechar caixa': 'CLOSE_REGISTER',
+                                        'Visualizar relatórios financeiros': 'VIEW_REPORTS',
                                     });
                                     return (
                                         <tr key={permission} className="hover:bg-slate-50/50 dark:hover:bg-zinc-800/20 transition-colors">

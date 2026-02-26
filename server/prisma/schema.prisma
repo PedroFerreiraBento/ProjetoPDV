@@ -1,0 +1,240 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Product {
+  id                String   @id
+  name              String
+  sku               String?
+  price             Int
+  cost              Int?
+  wholesalePrice    Int?
+  wholesaleQuantity Int?
+  stock             Float?
+  minStock          Float?
+  barcode           String?
+  categoryId        String?
+  unitId            String?
+  hasVariations     Boolean  @default(false)
+  options           String?  // JSON string
+  variants          String?  // JSON string
+  isFavorite        Boolean  @default(false)
+  promotionType     String   @default("NONE")
+  promotionX        Int?
+  promotionY        Int?
+  isBundle          Boolean  @default(false)
+  bundleItems       String?  // JSON string
+  trackBatches      Boolean  @default(false)
+  batches           String?  // JSON string
+  branchStocks      String?  // JSON string
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  deletedAt         DateTime?
+}
+
+model Category {
+  id          String   @id
+  name        String
+  description String?
+  color       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+}
+
+model Sale {
+  id              String   @id
+  subtotal        Int
+  totalDiscounts  Int
+  totalFees       Int
+  total           Int
+  change          Int?
+  customerCpf     String?
+  customerId      String?
+  customerName    String?
+  operatorId      String
+  operatorName    String?
+  branchId        String
+  terminalId      String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  status          String
+  observation     String?
+  couponCode      String?
+  voidReason      String?
+  voidedAt        DateTime?
+  voidedBy        String?
+  creditSettledAt DateTime?
+  
+  items           String // JSON string
+  payments        String // JSON string
+  deletedAt       DateTime?
+}
+
+model Customer {
+  id            String   @id
+  name          String
+  cpf           String?
+  email         String?
+  phone         String?
+  address       String?  // JSON string
+  type          String   @default("RETAIL")
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  deletedAt     DateTime?
+}
+
+model CashSession {
+  id              String   @id
+  branchId        String
+  terminalId      String
+  terminalName    String?
+  operatorId      String
+  operatorName    String?
+  openedAt        DateTime @default(now())
+  closedAt        DateTime?
+  status          String
+  openingBalance  Int
+  closingBalance  Int?
+  expectedBalance Int?
+  transactions    String // JSON string
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  deletedAt       DateTime?
+}
+
+model Terminal {
+  id        String   @id
+  name      String
+  branchId  String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+}
+
+model Branch {
+  id        String   @id
+  name      String
+  cnpj      String?
+  phone     String?
+  address   String?  // JSON string
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+}
+
+model AuditLog {
+  id           String   @id
+  entity       String
+  action       String   // CREATE, UPDATE, DELETE
+  oldData      String?  // JSON string
+  newData      String?  // JSON string
+  operatorId   String
+  operatorName String
+  branchId     String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  deletedAt    DateTime?
+}
+
+model Unit {
+  id             String   @id
+  name           String
+  abbreviation   String
+  allowFractions Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  deletedAt      DateTime?
+}
+
+model Operator {
+  id        String   @id
+  name      String
+  role      String
+  pin       String
+  email     String?
+  password  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+}
+
+model Supplier {
+  id          String   @id
+  name        String
+  cnpj        String?
+  phone       String?
+  email       String?
+  contactName String?
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+}
+
+model PurchaseOrder {
+  id           String   @id
+  supplierId   String
+  supplierName String
+  items        String // JSON string
+  status       String
+  totalCost    Int
+  notes        String?
+  createdAt    DateTime @default(now())
+  receivedAt   DateTime?
+  receivedBy   String?
+  updatedAt    DateTime @updatedAt
+  deletedAt    DateTime?
+}
+
+model StockMovement {
+  id           String   @id
+  productId    String
+  variantId    String?
+  quantity     Float
+  type         String
+  branchId     String?
+  toBranchId   String?
+  reason       String?
+  operatorId   String
+  operatorName String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  deletedAt    DateTime?
+}
+
+model Coupon {
+  id            String   @id
+  code          String
+  discountType  String
+  discountValue Int
+  minOrderValue Int?
+  maxUses       Int?
+  usedCount     Int      @default(0)
+  isActive      Boolean  @default(true)
+  expiresAt     DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  deletedAt     DateTime?
+}
+
+model Setting {
+  id                String   @id
+  allowNegativeStock Boolean @default(true)
+  blockOutOfStockSales Boolean @default(false)
+  allowCreditSales   Boolean @default(false)
+  enableScaleBarcodes Boolean @default(false)
+  scaleBarcodePrefix String  @default("2")
+  scaleValueType     String  @default("PRICE")
+  scaleItemCodeLength Int    @default(4)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}

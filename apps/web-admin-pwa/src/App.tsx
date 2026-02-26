@@ -49,12 +49,11 @@ function RequireAdmin({ children }: { children: JSX.Element }) {
 
 function App() {
     const { operators } = useOperatorsStore()
-    const { sync } = useSyncStore()
+    const { sync, hasBootstrapped } = useSyncStore()
     const hasOperators = operators.length > 0
 
     // Auto-sync logic
     useEffect(() => {
-        if (!hasOperators) return // Don't sync if no operators/not setup
         // Run sync immediately on mount
         sync()
 
@@ -72,6 +71,10 @@ function App() {
             window.removeEventListener('online', handleOnline)
         }
     }, [sync])
+
+    if (!hasBootstrapped) {
+        return null
+    }
 
     return (
         <BrowserRouter>

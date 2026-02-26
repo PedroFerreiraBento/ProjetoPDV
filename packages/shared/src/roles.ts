@@ -15,6 +15,7 @@ export type AppPermission =
     | 'CREATE_SALE'
     | 'VOID_SALE'
     | 'APPLY_DISCOUNT'
+    | 'MANAGE_PRICES'
     | 'OPEN_REGISTER'
     | 'CLOSE_REGISTER'
 
@@ -30,6 +31,7 @@ export const ROLE_PERMISSIONS: Record<AppRole, AppPermission[]> = {
         'CREATE_SALE',
         'VOID_SALE',
         'APPLY_DISCOUNT',
+        'MANAGE_PRICES',
         'OPEN_REGISTER',
         'CLOSE_REGISTER',
         'VIEW_REPORTS',
@@ -40,6 +42,7 @@ export const ROLE_PERMISSIONS: Record<AppRole, AppPermission[]> = {
         'CREATE_SALE',
         'VOID_SALE',
         'APPLY_DISCOUNT',
+        'MANAGE_PRICES',
         'OPEN_REGISTER',
         'CLOSE_REGISTER',
         'VIEW_REPORTS',
